@@ -6,9 +6,9 @@ function sus_map_preprocess_page(&$vars) {
         drupal_add_js(      'https://maps.googleapis.com/maps/api/js?key=AIzaSyDNjtVAw-rtsezrI9pK791_Kji8mBf_Xxo&sensor=true');
         drupal_add_js($js . 'libs/modernizr.js');
         drupal_add_js($js . 'libs/mustache.js');
-        drupal_add_js($js . 'google_analytics.js');
-        drupal_add_js($js . 'uw_maps.js');
-        drupal_add_js($js . 'campusmap.js');
+        drupal_add_js($js . 'libs/google_analytics.js');
+        drupal_add_js($js . 'uw_maps/uw_maps.js');
+        drupal_add_js($js . 'uw_maps/campusmap.js');
         drupal_add_js($js . 'susmap_helper.js');
         drupal_add_js($js . 'susmap_info_window.js');
         drupal_add_js($js . 'susmap_page_styles.js');
