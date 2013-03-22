@@ -221,7 +221,6 @@
 function initializeUWMap(susmap) {
   (function ($) {
   // make the map tall enough for hiding the iphone url bar
-  $('#map_canvas').height($(window).height()+60);
 //  $('body').on('click', 'li.disabled > a', function() {
 //    return false; 
 //  });
@@ -244,19 +243,7 @@ function initializeUWMap(susmap) {
   var map = susmap.map;
   map.mapTypes.set('campusmap', new CampusMap());
   map.setMapTypeId('campusmap');
-  
-  //map.overlayMapTypes.insertAt(0, new CampusMap())
 
-  var marker = new google.maps.Marker({
-        icon: window.location.pathname + 'wp-content/themes/campusmap/css/images/icons/marker_plus.png',
-        map:map
-  });
-
-  var directionsService = new google.maps.DirectionsService();
-  var directionsDisplay = new google.maps.DirectionsRenderer({
-                                suppressMarkers: true,
-                                polylineOptions: { strokeColor: 'orchid', strokeWeight: 6 }
-                          });
 //var panoramioService = new google.maps.panoramio.PanoramioLayer();
 //Uncaught TypeError: Cannot read property 'PanoramioLayer' of undefined
 //var InfoWindow = new UWInfoWindow();

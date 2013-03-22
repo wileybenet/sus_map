@@ -14,6 +14,7 @@ function initInfoWindowNS() {
             this_.content = $('#sus-map-info-window').find('.info-window-content');
             this_.tax = $('#sus-map-info-window').find('.info-window-tax');
             this_.image = $('#sus-map-info-window').find('.info-window-image');
+            this_.imageBuilding = $('#sus-map-info-window').find('.info-window-image-building');
             this_.close = $('#sus-map-info-window').find('.info-window-close');
             this_.imageAnchor = {x: 22, y: -150};
         }(jQuery));
@@ -53,7 +54,6 @@ function initInfoWindowNS() {
             this_.clearDiv();
             
             this_.nType = this_.Susmap.nodeData[this_.nid].type;
-            this_.image.attr({src:"data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///ywAAAAAAQABAAACAUwAOw=="}).hide();
             this_.taxonomy = this_.Susmap.nodeData[this_.nid].taxonomy;
             this_.building = (this_.taxonomy.Building)?this_.taxonomy.Building[0]:null;
             this_.subtitle.html(
@@ -72,9 +72,11 @@ function initInfoWindowNS() {
             });
             this_.tax.html(terms);
             this_.content.html(this_.Susmap.nodeData[this_.nid].body);
-            if (this_.Susmap.nodeData[this_.nid].image)
+            if (this_.Susmap.nodeData[this_.nid].image) {
                 this_.image.attr({src:"/sites/default/files/"+this_.Susmap.nodeData[this_.nid].image}).fadeIn();
-                    
+                if (this_.nType=="Building")
+                    this_.imageBuilding.attr({src:"/sites/default/files/"+this_.Susmap.nodeData[this_.nid].image}).show();
+            }
             google.maps.event.addListener(this_.marker, 'visible_changed', function() {
                 if (this_.div.is(':visible')) {
                     return this_.onDivRemove();
@@ -133,6 +135,9 @@ function initInfoWindowNS() {
             this_.subtitle.html("");
             this_.content.html(this_.loadIcon);
             this_.tax.html("");
+            var emptyImg = {src:"data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///ywAAAAAAQABAAACAUwAOw=="};
+            this_.image.attr(emptyImg).hide();
+            this_.imageBuilding.attr(emptyImg).hide();
             var h = this_.content.find('.info-window-loader').parent().height();
             this_.content.find('.info-window-loader').css({top: h/2-16+"px"});
         }(jQuery));

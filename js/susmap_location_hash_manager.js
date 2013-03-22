@@ -37,9 +37,9 @@ LocationHashManager.prototype.loadInit = function() {
     if (this.node) {
         (function($) {
             $.each(this_.Susmap.markerSet, function(k,v) {
-                if (v.marker.nid == this_.node) {
-                    var infoWindow = new InfoWindow(this_.Susmap, v.marker);
-                    this_.Susmap.openInfoWindow(infoWindow, v.marker);
+                if (v.nid == this_.node) {
+                    var infoWindow = new InfoWindow(this_.Susmap, v);
+                    this_.Susmap.openInfoWindow(infoWindow, v);
                 }
             });
         }(jQuery));

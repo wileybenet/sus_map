@@ -1,5 +1,4 @@
 
-function initFilterNS() {
     Filter = function(root) {
         this.baseTemplate = '<div class="sus-map-filter-base-selector" id="{{id}}"><img class="sus-map-filter-base-img" src="{{path}}" alt="{{marker}}" /></div>';
         var HTMLString = this.HTML;
@@ -29,5 +28,5 @@ function initFilterNS() {
             that.HTML += '<div class="c-b"></div></div><div id="sus-map-filter-base-title"></div>';
         }(jQuery));
     }
-}
+
 

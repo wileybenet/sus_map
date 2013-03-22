@@ -75,7 +75,7 @@ function get_all_node_data_susmap($nids) {
     while ($row = $result->fetchAssoc()) {
         $Nimages[$row['entity_id']] = str_replace("public://", "", $row['uri']);
     }
-    
+        
     // location
     $result = Database::getConnection()->query("SELECT location_instance.nid, location.latitude, location.longitude FROM {location} LEFT JOIN location_instance ON location.lid = location_instance.lid");
     $Nlocs = array();
