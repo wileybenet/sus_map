@@ -1,0 +1,261 @@
+<?php
+
+function sus_map_preprocess_page(&$vars) {
+    if (arg(0) == 'map') {
+        $js = drupal_get_path('module', 'sus_map') . '/js/';
+        drupal_add_js(      'https://maps.googleapis.com/maps/api/js?key=AIzaSyDNjtVAw-rtsezrI9pK791_Kji8mBf_Xxo&sensor=true');
+        drupal_add_js($js . 'libs/modernizr.js');
+        drupal_add_js($js . 'libs/mustache.js');
+        drupal_add_js($js . 'google_analytics.js');
+        drupal_add_js($js . 'uw_maps.js');
+        drupal_add_js($js . 'campusmap.js');
+        drupal_add_js($js . 'susmap_helper.js');
+        drupal_add_js($js . 'susmap_info_window.js');
+        drupal_add_js($js . 'susmap_page_styles.js');
+        drupal_add_js($js . 'susmap_location_hash_manager.js');
+        drupal_add_js($js . 'susmap_filter.js');
+        drupal_add_js($js . 'susmap.js');
+        drupal_add_js(array('sus_map' => array('loc' => 'Success!')), 'setting');
+        
+        // Get sus-map absolute path
+        $susHome = drupal_get_path('module', 'sus_map') . '/';
+        drupal_add_js(array('sus_map' => array('root' => $susHome)), 'setting');
+        
+    // Get markers icon num
+        $dir = drupal_get_path('module', 'sus_map') . '/js/markers/';
+        $fileCount = count(glob("{$dir}/*.*"));
+        drupal_add_js(array('sus_map' => array('markerCount' => $fileCount)), 'setting');
+        
+    // Get marker directory names
+        $markerNames = getMarkerFileNames($dir);
+        drupal_add_js(array('sus_map' => array('markerNames' => json_encode($markerNames))), 'setting');
+        
+    // Get all node ids
+        $nodeIDs = get_all_node_ids();
+        drupal_add_js(array('sus_map' => array('nodeIDs' => json_encode($nodeIDs))), 'setting');
+        
+        $nodeData = get_all_node_data_susmap($nodeIDs);
+        drupal_add_js(array('sus_map' => array('nodeData' => json_encode($nodeData))), 'setting');
+        
+    // Get node types
+        $query = new EntityFieldQuery();
+        $query->entityCondition('entity_type', 'node');
+        $results = $query->execute();
+        $nodes = $results['node'];
+        $nodes = objectToArray($nodes);
+        $nodeTypes = array();
+        foreach ($nodes as $node) {
+            $pos = strpos($node['type'], "gmap");
+            if ($pos === 0) {
+                $nodeTypes[substr($node['type'], 5)] = true;
+            }
+        }
+        drupal_add_js(array('sus_map' => array('nodes' => $nodeTypes)), 'setting');
+        
+        // add css and js to the application
+        $vars['scripts'] = drupal_get_js();
+        $css = drupal_get_path('module', 'sus_map') . '/css/';
+        drupal_add_css($css . 'styles.css', "module");
+        $vars['styles'] = drupal_get_css();
+    }
+}
+
+// get all node data
+function get_all_node_data_susmap($nids) {
+    // body
+    $result = Database::getConnection()->query("SELECT entity_id, body_value FROM field_revision_body");
+    $Nbodies = array();
+    while ($row = $result->fetchAssoc()) {
+        $Nbodies[$row['entity_id']] = $row['body_value'];
+    }
+    
+    // image
+    $result = Database::getConnection()->query("SELECT field_revision_field_image.entity_id, file_managed.uri FROM {field_revision_field_image} LEFT JOIN file_managed ON field_revision_field_image.field_image_fid = file_managed.fid");
+    $Nimages = array();
+    while ($row = $result->fetchAssoc()) {
+        $Nimages[$row['entity_id']] = str_replace("public://", "", $row['uri']);
+    }
+    
+    // location
+    $result = Database::getConnection()->query("SELECT location_instance.nid, location.latitude, location.longitude FROM {location} LEFT JOIN location_instance ON location.lid = location_instance.lid");
+    $Nlocs = array();
+    while ($row = $result->fetchAssoc()) {
+        $Nlocs[$row['nid']] = array(
+            'lat' => $row['latitude'], 
+            'lng' => $row['longitude']
+            );
+    }
+        
+    // title, type and taxonomy
+    $result = Database::getConnection()->query("SELECT node.nid, node.title, node.type, taxonomy_index.tid FROM {node} LEFT JOIN taxonomy_index ON node.nid = taxonomy_index.nid ORDER BY node.nid");
+    $NtidSet = array();
+    $Ntitles = array();
+    $Ntypes = array();
+    while ($row = $result->fetchAssoc()) {
+        if (isset($NtidSet[$row['nid']]))
+            array_push($NtidSet[$row['nid']], $row['tid']);
+        else {
+            $NtidSet[$row['nid']] = array($row['tid']);
+            $Ntitles[$row['nid']] = $row['title'];
+            $Ntypes[$row['nid']] = $row['type'];
+        }
+    }
+    $result = Database::getConnection()->query("SELECT vid, name FROM taxonomy_vocabulary");
+    $vnames = array();
+    while ($row = $result->fetchAssoc()) {
+        $vnames[$row['vid']] = $row['name'];
+    }
+    $result = Database::getConnection()->query("SELECT tid, vid, name FROM taxonomy_term_data");
+    $tnames = array();
+    while ($row = $result->fetchAssoc()) {
+        $tnames[$row['tid']] = array('vname'=>substr($vnames[$row['vid']], 5), 'tname'=>$row['name']);
+    }
+    
+    // format node
+    $nodeData = array();
+    foreach ($nids as $nid) {
+        $nodeData[$nid] = array('title' => $Ntitles[$nid], 'type' => $Ntypes[$nid]);
+        if (isset($Nbodies[$nid])) {
+            $nodeData[$nid]['body'] = $Nbodies[$nid];
+        } else {
+            $nodeData[$nid]['body'] = null;
+        }
+        if (isset($Nimages[$nid])) {
+            $nodeData[$nid]['image'] = $Nimages[$nid];
+        } else {
+            $nodeData[$nid]['image'] = null;
+        }
+        if (isset($Nlocs[$nid])) {
+            $nodeData[$nid]['location'] = $Nlocs[$nid];
+        } else {
+            $nodeData[$nid]['location'] = null;
+        }
+    }
+    
+    // format taxonomy names
+    foreach ($NtidSet as $nid => $Ntids) {
+        $nodeData[$nid]['taxonomy'] = array();
+        foreach ($Ntids as $Ntid) {
+            if ($Ntid) {
+                $vname = $tnames[$Ntid]['vname'];
+                if (isset($nodeData[$nid]['taxonomy'][$vname])) {
+                    array_push($nodeData[$nid]['taxonomy'][$vname], $tnames[$Ntid]['tname']);
+                } else {
+                    $nodeData[$nid]['taxonomy'][$vname] = array($tnames[$Ntid]['tname']);
+                }
+            }
+        }
+    }
+    
+    return $nodeData;
+}
+
+function sus_map_menu() {
+    $items = array();
+    $items['nodes/get/data'] = array(
+        "title" => "Title",
+        'page callback' => 'sus_map_get_data_ajax',
+        'access arguments' => array('access sus_map content'),
+        'type' => MENU_CALLBACK
+    );
+    return $items;
+}
+function sus_map_perm() {
+   return array('access sus_map content');
+}
+
+function sus_map_get_data_ajax($nid) {
+    
+    return drupal_json_output(sus_map_get_field_data_helper($nid));
+    
+    exit;
+}
+
+function sus_map_get_field_data_helper($nid) {
+    $content = array();
+    
+    $title = get_node_field_data("title", "node", "nid", $nid);
+    $content['title'] = $title[0];
+    $terms = get_node_field_data("tid", "taxonomy_index", "nid", $nid);
+    $content['terms'] = array();
+    foreach($terms as $term) {
+        $tname = get_node_field_data("name", "taxonomy_term_data", "tid", $term);
+        $vid = get_node_field_data("vid", "taxonomy_term_data", "tid", $term);
+        $vname = get_node_field_data("name", "taxonomy_vocabulary", "vid", $vid[0]);
+        $vname = substr($vname[0], 5);
+        if (!isset($content['terms'][$vname])) {
+            $content['terms'][$vname] = array();
+        }
+        array_push($content['terms'][$vname], $tname[0]);
+    }
+    $body = get_node_field_data("body_value", "field_revision_body", "entity_id", $nid);
+    $content['body'] = array("");
+    if (isset($body[0])) {
+        $content['body'] = $body[0];
+    }
+    $imgID = get_node_field_data("field_image_fid", "field_revision_field_image", "entity_id", $nid);
+    if ($imgID) {
+        $image = get_node_field_data("uri", "file_managed", "fid", $imgID);
+        $content['image'] = str_replace("public://", "", $image);
+    } else {
+        $content['image'] = null;
+    }
+    return $content;
+}
+
+function get_all_node_ids() {
+    $result = Database::getConnection()->query("SELECT `nid` FROM {node}");
+    $content = array();
+    if ($result) {
+        while ($row = $result->fetchAssoc()) {
+            array_push($content, $row["nid"]);
+        }
+    }
+    return $content;
+}
+
+// $field, $table, $IDfield, $ID
+function get_node_field_data($f, $t, $idf, $id) {
+    $result = Database::getConnection()->query("SELECT $f FROM {".$t."} WHERE $idf = $id");
+    $content = array();
+    if ($result) {
+        while ($row = $result->fetchAssoc()) {
+            array_push($content, $row[$f]);
+        }
+    }
+    return $content;
+}
+
+
+function getMarkerFileNames($path) {
+    $entries = array();
+    if ($handle = opendir($path)) {
+        while (false !== ($entry = readdir($handle))) {
+            if ($entry != "." && $entry != "..") {
+                array_push($entries, $entry);
+            }
+        }
+        closedir($handle);
+    }
+    return $entries;
+}
+
+
+function objectToArray($d) {
+    if (is_object($d)) {
+        // Gets the properties of the given object
+        // with get_object_vars function
+        $d = get_object_vars($d);
+    }
+    if (is_array($d)) {
+        /*
+        * Return array converted to object
+        * Using __FUNCTION__ (Magic constant)
+        * for recursive call
+        */
+        return array_map(__FUNCTION__, $d);
+    } else {
+        // Return array
+        return $d;
+    }
+}
