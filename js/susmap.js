@@ -7,10 +7,14 @@ Susmap = function() {
     this.root = Drupal.settings.sus_map.root;
     this.nodeData = jQuery.parseJSON(Drupal.settings.sus_map.nodeData);
     this.markerSet = [];
+    
     this.infoWindow = [];
+    this.infoWindowStopProp = false;
+   
+    this.markerTitle = jQuery('#sus-map-marker-title');
     this.nodeTypes = [];
-    this.visMarkers = {};
-    this.buildingsByName = {};
+    this.visMarkers = [];
+    this.buildingDataByName = {};
 
     this.init();
 
@@ -51,19 +55,32 @@ Susmap.prototype.init = function() {
 
         // load node data into markers, json
         $.each(this_.nodeData, function(key, val) {
-            (function () {
-
+            (function () {                
                 var nodeType = val.type;
                 var readableNodeType = nodeType.substring(5).removeDash().toTitleCase().deleteZeros();
                 var fileName = this_.addNodeCategory(nodeType);
 
                 var marker;
+                
+                if (val.taxonomy) {
+                    var bldg = val.taxonomy.Building;
+                    if (bldg) {
+                        if (!this_.buildingDataByName[bldg])
+                            this_.buildingDataByName[bldg] = {};
+                        if (readableNodeType != "Building") {
+                            var ob = {nid:key, url:this_.root+"js/markers/"+fileName, name:val.title};
+                            if (this_.buildingDataByName[bldg].childNodes) {
+                                this_.buildingDataByName[bldg].childNodes.push(ob);
+                            } else {
+                                this_.buildingDataByName[bldg].childNodes = [ob];
+                            }
+                        }
+                    }
+                }
 
                 if (readableNodeType == "Building") {
-                    var ob = {nid:key};
-                    this_.buildingsByName[val.title] = ob;
                     marker = this_.setBuildingMarker(key, val);
-
+                    this_.buildingDataByName[bldg].nid = key;
                 } else {
 
                     var z = 50-parseFloat(val.location.lat);
@@ -71,24 +88,30 @@ Susmap.prototype.init = function() {
 
                     marker = new google.maps.Marker({
                         position: new google.maps.LatLng(parseFloat(val.location.lat), parseFloat(val.location.lng)),
-                        title: val.title,
+                        //title: val.title,
                         map: this_.map,
                         icon: this_.root+"js/markers/"+fileName,
-                        shadow: this_.root+'js/markers/icon-shadow.png',
+                        shadow: this_.root+"js/markers/icon-shadow.png",
                         zIndex: z
                     });
                     marker.zReset = z;
+                    google.maps.event.addListener(marker, 'mouseover', function(e, i) {
+                        this_.openIconTitle(e, marker.nid, 22);
+                    });
+                    google.maps.event.addListener(marker, 'mouseout', function() {    
+                        this_.markerTitle.hide();
+                    });
 
                     // clear map
                     marker.setVisible(false);
-                    this_.markerSet.push(marker);
                 }
 
                 this_.nodeData[key].type = readableNodeType;
                 this_.nodeData[key].nType = readableNodeType.replace(/ /g, "");
 
                 marker.nid = key;
-                this_.visMarkers[marker.nid] = marker;
+                
+                this_.markerSet.push(marker);
 
                 // info window
                 var infoWindow = new InfoWindow(this_, marker);
@@ -119,7 +142,7 @@ Susmap.prototype.setBuildingMarker = function(key, val) {
     };
     var marker = new google.maps.Marker({
         position: new google.maps.LatLng(parseFloat(val.location.lat), parseFloat(val.location.lng)),
-        title: val.title,
+        //title: val.title,
         map: this_.map,
         icon: icon,
         flat: true,
@@ -127,23 +150,52 @@ Susmap.prototype.setBuildingMarker = function(key, val) {
     });
     marker.zReset = 1000;
 
-    google.maps.event.addListener(marker, 'mouseover', function() {
+    google.maps.event.addListener(marker, 'mouseover', function(e, i) {
         var icon = {
             url: this_.root+"js/markers/building/building-hover.png",
             anchor: new google.maps.Point(20, 20)
         };
+        this_.openIconTitle(e, marker.nid);
         marker.setIcon(icon);
-        marker.setZIndex(1000);
     });
     google.maps.event.addListener(marker, 'mouseout', function() {
         var icon = {
             url: this_.root+"js/markers/building/building-icon.png",
             anchor: new google.maps.Point(20, 20)
         };
-        marker.setIcon(icon);
-        marker.setZIndex(1000);
+        marker.setIcon(icon);        
+        this_.markerTitle.hide();
     });
     return marker;
+}
+
+Susmap.prototype.getPixelFromLatLng = function(e) {
+    var this_ = this;
+    
+    var topRight = this_.map.getProjection().fromLatLngToPoint(this_.map.getBounds().getNorthEast()); 
+    var bottomLeft = this_.map.getProjection().fromLatLngToPoint(this_.map.getBounds().getSouthWest()); 
+    var scale = Math.pow(2,this_.map.getZoom()); 
+    var worldPoint = this_.map.getProjection().fromLatLngToPoint(e.latLng); 
+    var loc = new google.maps.Point((worldPoint.x-bottomLeft.x)*scale,(worldPoint.y-topRight.y)*scale);
+    loc.x = Math.floor(loc.x);
+    loc.y = Math.floor(loc.y);
+    return loc;
+}
+
+Susmap.prototype.openIconTitle = function(e, nid, vOff) {
+    var this_ = this;
+    
+    if (this_.infoWindowStopProp) {
+        return false;
+    }
+    vOff = vOff || 0;
+    var loc = this_.getPixelFromLatLng(e);
+    
+    var x = loc.x,
+        y = loc.y;
+    var left = this.map.getDiv().style.marginLeft.split(" ")[0].parseNum()+22+"px";
+    
+    this.markerTitle.css({left:x, top:y, "margin-left":left, "margin-top":-15-vOff+"px"}).html("Marker Node ID: "+nid).show();
 }
 
 Susmap.prototype.openInfoWindow = function(infoWindow, marker) {
@@ -164,8 +216,8 @@ Susmap.prototype.markerFromNID = function(nid) {
     var marker;
     (function($) {
         $.each(this_.markerSet, function(k,v) {
-            if (v.marker.nid == nid) {
-                marker = v.marker;
+            if (v.nid == nid) {
+                marker = v;
             }
         });
     }(jQuery));
@@ -173,13 +225,14 @@ Susmap.prototype.markerFromNID = function(nid) {
 }
 Susmap.prototype.addNodeCategory = function(name) {
     var this_ = this;
+    name = name.replace(/_/g, '-').substr(5);
     var toReturn = "";
     (function($) {
         var icons = jQuery.parseJSON(Drupal.settings.sus_map.markerNames);
         $.each(icons, function(k,v) {
-            name = name.replace(/_/g, '-').substr(5);
             if (v.indexOf(name) > -1) {
                 toReturn = v;
+                return false;
             }
         });
         }(jQuery));
@@ -194,10 +247,24 @@ Susmap.prototype.setMarkerVisibility = function(field, vis) {
                 var marker = val;
                 if (this_.isInSetField(marker.nid, field)) {
                     marker.setVisible(vis);
+                    var index = $.inArray(marker, this_.visMarkers);
+                    if (index > -1) {
+                        this_.visMarkers.splice(index, 1);
+                    } else {
+                        this_.visMarkers.push(marker);
+                    }
                 }
             }());
         });
     }(jQuery));
+}
+
+Susmap.prototype.clearMarkers = function() {
+    var this_ = this;
+    jQuery.each(this_.visMarkers, function(k,v) {
+        v.setVisible(false);
+    });
+    this.visMarkers = [];
 }
 
 Susmap.prototype.isInSetField = function(id, field) {
@@ -230,6 +297,12 @@ Susmap.prototype.attachHandles = function() {
 Susmap.prototype.attachInfoWindowHandles = function() {
     var this_ = this;
     (function($) {
+        $(document).delegate("#sus-map-info-window", "mouseenter", function() {
+            this_.infoWindowStopProp = true;
+        });
+        $(document).delegate("#sus-map-info-window", "mouseleave", function() {
+            this_.infoWindowStopProp = false;
+        });
         $(document).delegate(".tax-building", "click", function() {
             var building = $(this).text();
             console.log(building);
@@ -309,5 +382,6 @@ jQuery(document).ready(function($) {
     $('body').html('<div id="map-container"></div>');
     $('#map-container').html('<div id="sus-map"></div>');
     initInfoWindowNS();
+    addTemplatesToDOM();
     MAP = new Susmap();
 });

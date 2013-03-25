@@ -70,6 +70,16 @@ function initInfoWindowNS() {
                     });
                 }
             });
+            if (this_.nType=="Building") {
+                var title = this_.Susmap.nodeData[this_.nid].title;
+                var childNodes = this_.Susmap.buildingDataByName[title].childNodes;
+                if (childNodes) {
+                    $.each(childNodes, function(k,v) {
+                        terms += Mustache.render($('#sus-map-building-nodes-template').html(), v);
+                    });
+                }
+                terms += '<div class="c-b"></div>';
+            }
             this_.tax.html(terms);
             this_.content.html(this_.Susmap.nodeData[this_.nid].body);
             if (this_.Susmap.nodeData[this_.nid].image) {
@@ -126,6 +136,7 @@ function initInfoWindowNS() {
         this_.div.remove();
         this_.markerFade(this_.Susmap.curMarker);
         this.Susmap.hashManager.hashSelectNode(false);
+        this_.Susmap.infoWindowStopProp = false;
         return false;
     }
     InfoWindow.prototype.clearDiv = function() {
@@ -140,28 +151,24 @@ function initInfoWindowNS() {
             this_.imageBuilding.attr(emptyImg).hide();
             var h = this_.content.find('.info-window-loader').parent().height();
             this_.content.find('.info-window-loader').css({top: h/2-16+"px"});
+            this_.Susmap.infoWindowStopProp = false;
         }(jQuery));
     }
     InfoWindow.prototype.handleLink = function($div) {
         var this_ = this;
-        console.log($div.attr("action"));
         var action = $div.attr("action");
         var nodeSet = $div.html().replace(/ /g, "").replace(/amp;/g, "");
         if (action == "info-nType") {
-            this_.Susmap.hashManager.hashSelectSet(false);
             (function($) {
                 if ($('#sus-map-filter-deselect').hasClass("sus-map-filter-base-de-selected")) {
                     $('#sus-map-filter-deselect').click();
                 }
-                $('#'+nodeSet).addClass('sus-map-filter-base-selector-selected');
-                $('#sus-map-filter-deselect').addClass('sus-map-filter-base-de-selected');
-                $('#sus-map-filter-deselect').attr("title", "Deselect All Items");
-                $('#deselect-x-img').show();
-            }(jQuery));
-            this_.Susmap.hashManager.hashSelectSet(nodeSet);
-            this_.Susmap.setMarkerVisibility(nodeSet, true);
+                if (!$('#'+nodeSet).hasClass("sus-map-filter-base-selector-selected")) {
+                    $('#'+nodeSet).click();
+                }
+            });
         } else if (action == "taxonomy") {
-            this_.Susmap.hashManager.hashSelectSet(false);
+            //this_.Susmap.hashManager.hashSelectSet(false);
             (function($) {
                 if ($('#sus-map-filter-deselect').hasClass("sus-map-filter-base-de-selected")) {
                     $('#sus-map-filter-deselect').click();
@@ -170,7 +177,7 @@ function initInfoWindowNS() {
             this_.Susmap.hashManager.hashSelectSet($div.html().replace(/ /g, "").replace(/amp;/g, ""), true);
             this_.Susmap.setMarkerVisibility($div.html().replace(/ /g, "").replace(/amp;/g, ""), true);
         } else if (action == "building") {
-            var nid = this_.Susmap.buildingsByName[$div.html().replace(/amp;/g, "")].nid;
+            var nid = this_.Susmap.buildingDataByName[$div.html().replace(/amp;/g, "")].nid+"";
             var marker = this_.Susmap.markerFromNID(nid);
             var infoWindow = new InfoWindow(this_.Susmap, marker);
             this_.Susmap.openInfoWindow(infoWindow, marker);
@@ -187,7 +194,7 @@ function initInfoWindowNS() {
     }
     InfoWindow.prototype.disableEvents = function() {
         // We want to cancel all the events so they do not go to the map
-        var events = ['mousedown', 'mouseover', 'mouseout', 'mouseup',
+        var events = ['mousedown', 'mouseup',
             'mousewheel', 'DOMMouseScroll', 'touchstart', 'touchend', 'touchmove',
             'dblclick', 'contextmenu'];
 

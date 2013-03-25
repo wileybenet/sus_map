@@ -52,7 +52,8 @@ PageStyles.prototype.renderSusmapOverlays = function() {
         $('body').append('<a href="http://green.washington.edu" title="The Office of Environmental Stewardship and Sustainability" id="sus-map-logo-text"></a>');
         $('body').append('<div id="sus-map-col"><div id="sus-map-filter-box"><div id="sus-map-filter-deselect" class="sus-map-filter-base-de" title="Select All Items"><img id="deselect-x-img" src="/'+Drupal.settings.sus_map.root+"css/images/"+'x2.png" /></div></div></div>');
         $('#sus-map-col').append('<a href="http://green.washington.edu" title="The Office of Environmental Stewardship and Sustainability" id="sus-map-logo"></a>');
-
+        
+        $('body').append('<div id="sus-map-marker-title"></div>');
         $('body').append('<div id="sus-map-info-window"></div>');
             $('#sus-map-info-window').append('<img class="info-window-icon-frame" />');
             $('#sus-map-info-window').append('<img class="info-window-image-building" />');

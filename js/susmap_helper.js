@@ -7,6 +7,9 @@ String.prototype.toTitleCase = function() {
 String.prototype.deleteZeros = function() {
     return this.replace(/0 /g, "");
 }
+String.prototype.parseNum = function(real) {
+    return (real)?parseFloat(this):parseInt(this);
+}
 Array.prototype.clean = function(deleteValue) {
   for (var i = 0; i < this.length; i++) {
     if (this[i] == deleteValue) {         

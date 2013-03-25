@@ -9,6 +9,7 @@ function sus_map_preprocess_page(&$vars) {
         drupal_add_js($js . 'libs/google_analytics.js');
         drupal_add_js($js . 'uw_maps/uw_maps.js');
         drupal_add_js($js . 'uw_maps/campusmap.js');
+        drupal_add_js($js . 'susmap_templates.js');
         drupal_add_js($js . 'susmap_helper.js');
         drupal_add_js($js . 'susmap_info_window.js');
         drupal_add_js($js . 'susmap_page_styles.js');
