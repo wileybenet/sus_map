@@ -12,13 +12,15 @@ function initInfoWindowNS() {
             this_.title = $('#sus-map-info-window').find('.info-window-title');
             this_.subtitle = $('#sus-map-info-window').find('.info-window-subtitle');
             this_.content = $('#sus-map-info-window').find('.info-window-content');
-            this_.tax = $('#sus-map-info-window').find('.info-window-tax');
+            this_.taxHeader = $('#sus-map-info-window').find('.info-window-tax-header');
+            this_.tax = $('#sus-map-info-window').find('.info-window-tax').hide();
             this_.image = $('#sus-map-info-window').find('.info-window-image');
             this_.imageBuilding = $('#sus-map-info-window').find('.info-window-image-building');
             this_.close = $('#sus-map-info-window').find('.info-window-close');
             this_.imageAnchor = {x: 22, y: -150};
         }(jQuery));
     }
+    
     InfoWindow.prototype = new google.maps.OverlayView();
 
     InfoWindow.prototype.open = function(map, point, id) {
@@ -61,18 +63,22 @@ function initInfoWindowNS() {
                 ((this_.nType!="Building")?setLink(this_.nType, "info-nType"):this_.nType)
             );
             this_.title.html(this_.Susmap.nodeData[this_.nid].title);
+            
             var terms = "";
+            this_.taxHeader.find('span').html("Associated Terms");
             $.each(this_.Susmap.nodeData[this_.nid].taxonomy, function(k,v) {
                 if (k != "Building") {
                     terms += k+"<br />";
                     $.each(v, function(key,val) {
-                        terms += setLink(val, "taxonomy")+"<br />";
+                        terms += setLink(val, "taxonomy", "tax-link")+"<br />";
                     });
                 }
             });
             if (this_.nType=="Building") {
+                this_.taxHeader.find('span').html("Features:");
                 var title = this_.Susmap.nodeData[this_.nid].title;
                 var childNodes = this_.Susmap.buildingDataByName[title].childNodes;
+                terms = "";
                 if (childNodes) {
                     $.each(childNodes, function(k,v) {
                         terms += Mustache.render($('#sus-map-building-nodes-template').html(), v);
@@ -80,7 +86,9 @@ function initInfoWindowNS() {
                 }
                 terms += '<div class="c-b"></div>';
             }
-            this_.tax.html(terms);
+            this_.tax.html(terms).height(0);
+            this_.taxHeader.on("click", function() {this_.toggleTax(this_)});
+            
             this_.content.html(this_.Susmap.nodeData[this_.nid].body);
             if (this_.Susmap.nodeData[this_.nid].image) {
                 this_.image.attr({src:"/sites/default/files/"+this_.Susmap.nodeData[this_.nid].image}).fadeIn();
@@ -118,6 +126,23 @@ function initInfoWindowNS() {
         panes.floatPane.appendChild(this.div.show().get(0)); 
         this.focus();
     }
+    InfoWindow.prototype.toggleTax = function(self) {
+        var this_ = this;
+        (function($) {
+            if (self.tax.is(':visible')) {
+                self.tax.animate({height:"0px"}, 200, function() {
+                    self.taxHeader.find('img').attr("src", self.Susmap.root+"css/images/plus.png");
+                    $(this).hide()
+                });
+            } else {
+                self.tax.css("height", "auto");
+                var h = self.tax.height();
+                self.tax.height(0);
+                self.taxHeader.find('img').attr("src", self.Susmap.root+"css/images/minus.png");
+                self.tax.show().animate({height:h+"px"});
+            }
+        }(jQuery));
+    }
     InfoWindow.prototype.focus = function() {
         var projection = this.getProjection();
         var point = projection.fromLatLngToDivPixel(this.latlng);
@@ -145,7 +170,9 @@ function initInfoWindowNS() {
             this_.title.html("");
             this_.subtitle.html("");
             this_.content.html(this_.loadIcon);
-            this_.tax.html("");
+            this_.tax.html("").hide();
+            this_.taxHeader.find('img').attr("src", this_.Susmap.root+"css/images/plus.png");
+            this_.taxHeader.off("click");
             var emptyImg = {src:"data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///ywAAAAAAQABAAACAUwAOw=="};
             this_.image.attr(emptyImg).hide();
             this_.imageBuilding.attr(emptyImg).hide();
@@ -166,7 +193,7 @@ function initInfoWindowNS() {
                 if (!$('#'+nodeSet).hasClass("sus-map-filter-base-selector-selected")) {
                     $('#'+nodeSet).click();
                 }
-            });
+            }(jQuery));
         } else if (action == "taxonomy") {
             //this_.Susmap.hashManager.hashSelectSet(false);
             (function($) {

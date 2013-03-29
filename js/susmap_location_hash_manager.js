@@ -17,6 +17,8 @@ LocationHashManager.prototype.init = function() {
 
     if (nodeSet != "") {
         this.nodeSet = nodeSet.split("+");
+    }
+    if (node != "") {
         this.node = (node)?parseInt(node):null;
     }
 }

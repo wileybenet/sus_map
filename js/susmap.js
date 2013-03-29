@@ -12,6 +12,7 @@ Susmap = function() {
     this.infoWindowStopProp = false;
    
     this.markerTitle = jQuery('#sus-map-marker-title');
+    this.markerTitle.content = jQuery('#sus-map-marker-title').find("span");
     this.nodeTypes = [];
     this.visMarkers = [];
     this.buildingDataByName = {};
@@ -163,8 +164,9 @@ Susmap.prototype.setBuildingMarker = function(key, val) {
             url: this_.root+"js/markers/building/building-icon.png",
             anchor: new google.maps.Point(20, 20)
         };
-        marker.setIcon(icon);        
-        this_.markerTitle.hide();
+        marker.setIcon(icon);
+        
+        this_.markerTitle.stop(true,true).fadeOut();
     });
     return marker;
 }
@@ -193,9 +195,10 @@ Susmap.prototype.openIconTitle = function(e, nid, vOff) {
     
     var x = loc.x,
         y = loc.y;
-    var left = this.map.getDiv().style.marginLeft.split(" ")[0].parseNum()+22+"px";
+    var left = this.map.getDiv().style.marginLeft.split(" ")[0].parseNum()+28+"px";
     
-    this.markerTitle.css({left:x, top:y, "margin-left":left, "margin-top":-15-vOff+"px"}).html("Marker Node ID: "+nid).show();
+    this.markerTitle.content.html(this_.nodeData[nid].title);
+    this.markerTitle.css({left:x, top:y, "margin-left":left, "margin-top":-15-vOff+"px"}).stop(true,true).fadeIn(250);
 }
 
 Susmap.prototype.openInfoWindow = function(infoWindow, marker) {
@@ -305,13 +308,15 @@ Susmap.prototype.attachInfoWindowHandles = function() {
         });
         $(document).delegate(".tax-building", "click", function() {
             var building = $(this).text();
-            console.log(building);
         });
         $(document).delegate(".filter-ntype", "click", function() {
             var nType = $(this).text().replace(/ /g, "");
             $('#'+nType).addClass("sus-map-filter-base-selector-selected");
             this_.setMarkerVisibility(nType, true);
             this_.hashManager.hashSelectSet(nType);
+        });
+        $(document).delegate(".info-window-tax-header", "click", function() {
+            $('.info-window-tax').animate({height:"200px"});
         });
     }(jQuery));
 }
@@ -371,7 +376,7 @@ Susmap.prototype.renderMap = function() {
         $('#sus-map-load-bar').animate({width:"100%"}, 1, function() {
             $('.screen-overlay').fadeOut(function(){$(this).remove()});
             var gmw = $(window).width();
-            $('#sus-map').width(gmw-106);
+            $('#sus-map').width(gmw);
             $(window).resize();
         });
     }(jQuery));

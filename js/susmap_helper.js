@@ -19,8 +19,8 @@ Array.prototype.clean = function(deleteValue) {
   }
   return this;
 };
-function setLink(str, url) {
-    var ob = {str:str, url:url};
-    var temp = '<span class="sus-map-link" action="{{url}}">{{str}}</span>';
+function setLink(str, url, cls) {
+    var ob = {str:str, url:url, cls:" "+cls};
+    var temp = '<span class="sus-map-link{{cls}}" action="{{url}}">{{str}}</span>';
     return Mustache.render(temp, ob);
 }

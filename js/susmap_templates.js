@@ -1,7 +1,7 @@
 
 var templates = '';
 
-templates += genTemp("building-nodes-template", '<div class="sus-map-building-childNode" title="{{name}}" style="background-image:url({{url}});" action="{{nid}}"></div>');
+templates += genTemp("building-nodes-template", '<img class="sus-map-building-childNode" title="{{name}}" src="{{url}}" action="{{nid}}" />');
 
 
 

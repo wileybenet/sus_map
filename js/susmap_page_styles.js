@@ -35,10 +35,9 @@ PageStyles.prototype.renderMap = function() {
             width: $(window).width()+"px",
             height: $(window).height()+"px"
         });
-        var left = 106;
         $('#sus-map').css({
-            margin: "0 0 0 "+left+"px",
-            width: $(window).width()-left+"px",
+            margin: "0px",
+            width: $(window).width()+"px",
             height: $(window).height()+"px"
         });
     }(jQuery));
@@ -54,6 +53,10 @@ PageStyles.prototype.renderSusmapOverlays = function() {
         $('#sus-map-col').append('<a href="http://green.washington.edu" title="The Office of Environmental Stewardship and Sustainability" id="sus-map-logo"></a>');
         
         $('body').append('<div id="sus-map-marker-title"></div>');
+            $('#sus-map-marker-title').append('<div class="sus-map-larr"></div>');
+                $('#sus-map-marker-title').find(".sus-map-larr").append('<div class="sus-map-larr-fill"></div>');
+            $('#sus-map-marker-title').append('<span></span>');
+        
         $('body').append('<div id="sus-map-info-window"></div>');
             $('#sus-map-info-window').append('<img class="info-window-icon-frame" />');
             $('#sus-map-info-window').append('<img class="info-window-image-building" />');
@@ -62,13 +65,14 @@ PageStyles.prototype.renderSusmapOverlays = function() {
             $('#sus-map-info-window').append('<div class="info-window-subtitle"></div>');
             $('#sus-map-info-window').append('<div class="info-window-title"></div>');
             $('#sus-map-info-window').append('<div class="info-window-lcol"></div>');
-                $('.info-window-lcol').append('<div class="info-window-tax"></div>');
                 $('.info-window-lcol').append('<div class="info-window-content"></div>');
             $('#sus-map-info-window').append('<div class="info-window-rcol"></div>');
                 $('.info-window-rcol').append('<img class="info-window-image" />');
             $('#sus-map-info-window').append('<div style="clear:both"></div>');
                 $('.info-window-icon-frame').attr("src", root+"css/images/icon_frame.png");
                 $('.info-window-close').attr("src", root+"css/images/x.png");
+            $('#sus-map-info-window').append('<div class="info-window-tax-header"><img class="sus-map-action-img" src="'+root+'css/images/plus.png" /><span></span></div>');
+            $('#sus-map-info-window').append('<div class="info-window-tax"></div>');
     }(jQuery));
 }
 
