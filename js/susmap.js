@@ -3,6 +3,7 @@ Susmap = function() {
     var this_ = this;
 
     this.styles = new PageStyles();
+    this.hashManager = new LocationHashManager(this_);
 
     this.root = Drupal.settings.sus_map.root;
     this.nodeData = jQuery.parseJSON(Drupal.settings.sus_map.nodeData);
@@ -13,17 +14,48 @@ Susmap = function() {
    
     this.markerTitle = jQuery('#sus-map-marker-title');
     this.markerTitle.content = jQuery('#sus-map-marker-title').find("span");
-    this.nodeTypes = [];
+    this.jsNodeTypes = [];
     this.visMarkers = [];
     this.buildingDataByName = {};
+    
+    this.searchable = {};
+    this.searchable.titles = [];
+    this.searchable.nidsByTitle = {};
+    
+    this.nidsByNtype = {};
+    this.nidsByTaxTerm = {};
+    this.taxTermsByJSName = {};
+    
+    this.filterData = [
+                    {catTitle:"Built Environment",
+                        catCheckbox:"BuiltEnvironment",
+                        nodeTypes:[]
+                    },
+                    {catTitle:"Environmental Office",
+                        catCheckbox:"EnvironmentalOffice",
+                        nodeTypes:[]
+                    },
+                    {catTitle:"Natural Environment",
+                        catCheckbox:"NaturalEnvironment",
+                        nodeTypes:[]
+                    },
+                    {catTitle:"Sustainable Dining",
+                        catCheckbox:"SustainableDining",
+                        nodeTypes:[]
+                    },
+                    {catTitle:"Transportation",
+                        catCheckbox:"Transportation",
+                        nodeTypes:[]
+                    },
+                    {catTitle:"Waste Management",
+                        catCheckbox:"WasteManagement",
+                        nodeTypes:[]
+                    }
+                ];
 
     this.init();
 
-    this.hashManager = new LocationHashManager(this_);
-
     this.renderMap();
-
-    this.hashManager.loadInit();
 
     loadGoogleAnalytics();
 };
@@ -47,20 +79,47 @@ Susmap.prototype.init = function() {
     this.map = new google.maps.Map(document.getElementById("sus-map"), mapOptions);
 
     (function($) {
-
+               
         var phpNodes = Drupal.settings.sus_map.nodes;
         $.each(phpNodes, function(k, val) {
             var key = (k+"").replace(/_/g, " ").toTitleCase().deleteZeros();
-            this_.nodeTypes[key] = [];
+            var jsName = "type:"+key.replace(/ /g, "");
+            this_.jsNodeTypes.push(jsName);
+            
+            var nodeDat = this_.addNodeCategory(k);
+            if (nodeDat.catID) 
+                this_.filterData[nodeDat.catID-1].nodeTypes.push({
+                                                                name:key, 
+                                                                jsName:jsName, 
+                                                                url:this_.root+'/js/markers/'+nodeDat.url
+                                                            });
         });
 
         // load node data into markers, json
         $.each(this_.nodeData, function(key, val) {
-            (function () {                
+            (function () {
+                
+                if ($.inArray(val.title, this_.searchable.titles) == -1) {
+                    this_.searchable.titles.push(val.title);
+                }
+                if (this_.searchable.nidsByTitle[val.title]) {
+                    this_.searchable.nidsByTitle[val.title].push(key);
+                } else {
+                    this_.searchable.nidsByTitle[val.title] = [key];
+                }
+                
                 var nodeType = val.type;
                 var readableNodeType = nodeType.substring(5).removeDash().toTitleCase().deleteZeros();
-                var fileName = this_.addNodeCategory(nodeType);
-
+                var jsNodeType = "type:"+readableNodeType.replace(/ /g, "");
+                var fileData = this_.addNodeCategory(nodeType.substr(5));
+                var fileName = fileData.url;
+                
+                if (!this_.nidsByNtype[jsNodeType]) {
+                    this_.nidsByNtype[jsNodeType] = [key];
+                } else {
+                    this_.nidsByNtype[jsNodeType].push(key)
+                }
+                
                 var marker;
                 
                 if (val.taxonomy) {
@@ -77,38 +136,34 @@ Susmap.prototype.init = function() {
                             }
                         }
                     }
+                    
+                    $.each(val.taxonomy, function(k,v) {
+                        if (k != "Building") {
+                            $.each(v, function(kk,vv) {
+                                var jsName = "term:"+vv.replace(/ /g, "");
+                                if (!this_.nidsByTaxTerm[jsName]) {
+                                    this_.nidsByTaxTerm[jsName] = [key];
+                                    this_.taxTermsByJSName[jsName] = vv;
+                                } else {
+                                    this_.nidsByTaxTerm[jsName].push(key)
+                                }
+                            });
+                        }
+                    });
+                    
                 }
 
                 if (readableNodeType == "Building") {
+                    this_.nodeData[key].type = readableNodeType;
+                    this_.nodeData[key].nType = readableNodeType;
                     marker = this_.setBuildingMarker(key, val);
                     this_.buildingDataByName[bldg].nid = key;
                 } else {
-
-                    var z = 50-parseFloat(val.location.lat);
-                    z = parseInt(z*100000);
-
-                    marker = new google.maps.Marker({
-                        position: new google.maps.LatLng(parseFloat(val.location.lat), parseFloat(val.location.lng)),
-                        //title: val.title,
-                        map: this_.map,
-                        icon: this_.root+"js/markers/"+fileName,
-                        shadow: this_.root+"js/markers/icon-shadow.png",
-                        zIndex: z
-                    });
-                    marker.zReset = z;
-                    google.maps.event.addListener(marker, 'mouseover', function(e, i) {
-                        this_.openIconTitle(e, marker.nid, 22);
-                    });
-                    google.maps.event.addListener(marker, 'mouseout', function() {    
-                        this_.markerTitle.hide();
-                    });
-
-                    // clear map
-                    marker.setVisible(false);
+                    this_.nodeData[key].type = readableNodeType;
+                    this_.nodeData[key].nType = jsNodeType;
+                    marker = this_.setMarker(key, val, fileName);
+                    
                 }
-
-                this_.nodeData[key].type = readableNodeType;
-                this_.nodeData[key].nType = readableNodeType.replace(/ /g, "");
 
                 marker.nid = key;
                 
@@ -117,21 +172,48 @@ Susmap.prototype.init = function() {
                 // info window
                 var infoWindow = new InfoWindow(this_, marker);
                 google.maps.event.addListener(marker, 'click', function() {
-                    this_.hashManager.hashSelectNode(marker.nid);
                     this_.openInfoWindow(infoWindow, marker);
                 });
-
+                
+                this_.nodeData[key].marker = marker;
+                this_.nodeData[key].infoWin = infoWindow;
+                
             }());
         });
-
-        // Add marker filter to the DOM
-        this_.filter = new Filter(this_.root);
-        $('#sus-map-filter-box').append(this_.filter.HTML);
-
-        this_.attachHandles();
-
     }(jQuery));
+    
+    
+    
+    this.filter = new Filter(this_);
+        this.filter.addToDOM();
+    this.attachHandles();    
     initializeUWMap(this_);
+    this.hashManager.updateMap(null, true, true);
+}
+
+Susmap.prototype.setMarker = function(key, val, fileName) {
+    var this_ = this;
+    
+    var z = 50-parseFloat(val.location.lat);
+    z = parseInt(z*100000);
+
+    var marker = new google.maps.Marker({
+        position: new google.maps.LatLng(parseFloat(val.location.lat), parseFloat(val.location.lng)),
+        map: this_.map,
+        icon: this_.root+"js/markers/"+fileName,
+        shadow: this_.root+"js/markers/icon-shadow.png",
+        visible: false,
+        zIndex: z
+    });
+    marker.zReset = z;
+    google.maps.event.addListener(marker, 'mouseover', function(e, i) {
+        this_.openIconTitle(e, marker.nid, 22);
+    });
+    google.maps.event.addListener(marker, 'mouseout', function() {    
+        this_.markerTitle.hide();
+    });
+
+    return marker;
 }
 
 Susmap.prototype.setBuildingMarker = function(key, val) {
@@ -143,7 +225,6 @@ Susmap.prototype.setBuildingMarker = function(key, val) {
     };
     var marker = new google.maps.Marker({
         position: new google.maps.LatLng(parseFloat(val.location.lat), parseFloat(val.location.lng)),
-        //title: val.title,
         map: this_.map,
         icon: icon,
         flat: true,
@@ -152,6 +233,9 @@ Susmap.prototype.setBuildingMarker = function(key, val) {
     marker.zReset = 1000;
 
     google.maps.event.addListener(marker, 'mouseover', function(e, i) {
+        if (this_.infoWindowStopProp) {
+            return false;
+        }
         var icon = {
             url: this_.root+"js/markers/building/building-hover.png",
             anchor: new google.maps.Point(20, 20)
@@ -166,7 +250,7 @@ Susmap.prototype.setBuildingMarker = function(key, val) {
         };
         marker.setIcon(icon);
         
-        this_.markerTitle.stop(true,true).fadeOut();
+        this_.markerTitle.stop(true,true).hide();
     });
     return marker;
 }
@@ -195,14 +279,17 @@ Susmap.prototype.openIconTitle = function(e, nid, vOff) {
     
     var x = loc.x,
         y = loc.y;
-    var left = this.map.getDiv().style.marginLeft.split(" ")[0].parseNum()+28+"px";
+    var left = this.map.getDiv().style.marginLeft.split(" ")[0].parseNum()+30+"px";
     
     this.markerTitle.content.html(this_.nodeData[nid].title);
     this.markerTitle.css({left:x, top:y, "margin-left":left, "margin-top":-15-vOff+"px"}).stop(true,true).fadeIn(250);
 }
 
-Susmap.prototype.openInfoWindow = function(infoWindow, marker) {
+Susmap.prototype.openInfoWindow = function(infoWindow, marker, noUpdate) {
     var this_ = this;
+    if (!noUpdate) {
+        this.hashManager.updateMap({infoWin:marker.nid});
+    }
     infoWindow.open(this_.map, marker.position);
 }
 
@@ -228,18 +315,18 @@ Susmap.prototype.markerFromNID = function(nid) {
 }
 Susmap.prototype.addNodeCategory = function(name) {
     var this_ = this;
-    name = name.replace(/_/g, '-').substr(5);
-    var toReturn = "";
+    name = name.replace(/_/g, '-');
+    var url = "";
     (function($) {
         var icons = jQuery.parseJSON(Drupal.settings.sus_map.markerNames);
         $.each(icons, function(k,v) {
             if (v.indexOf(name) > -1) {
-                toReturn = v;
+                url = v;
                 return false;
             }
         });
         }(jQuery));
-    return toReturn;
+    return {url:url, catID:url.substr(0, 1).parseNum()};
 }
 
 Susmap.prototype.setMarkerVisibility = function(field, vis) {
@@ -294,75 +381,33 @@ Susmap.prototype.isInSetField = function(id, field) {
 
 Susmap.prototype.attachHandles = function() {
     var this_ = this;
-    this.attachFilterHandles();
     this.attachInfoWindowHandles();
+    this.attachWindowHandles();
 }
 Susmap.prototype.attachInfoWindowHandles = function() {
     var this_ = this;
     (function($) {
-        $(document).delegate("#sus-map-info-window", "mouseenter", function() {
+        $(document).delegate("#sus-map-info-window", "mouseenter mousemove", function() {
             this_.infoWindowStopProp = true;
         });
         $(document).delegate("#sus-map-info-window", "mouseleave", function() {
             this_.infoWindowStopProp = false;
         });
-        $(document).delegate(".tax-building", "click", function() {
-            var building = $(this).text();
-        });
-        $(document).delegate(".filter-ntype", "click", function() {
-            var nType = $(this).text().replace(/ /g, "");
-            $('#'+nType).addClass("sus-map-filter-base-selector-selected");
-            this_.setMarkerVisibility(nType, true);
-            this_.hashManager.hashSelectSet(nType);
-        });
-        $(document).delegate(".info-window-tax-header", "click", function() {
-            $('.info-window-tax').animate({height:"200px"});
-        });
     }(jQuery));
 }
-Susmap.prototype.attachFilterHandles = function() {
-    var this_ = this;
-    (function($) {
-        $(document).delegate('.sus-map-filter-base-selector, .sus-map-filter-base-selector-selected', 'click', function() {
-            if ($(this).hasClass('sus-map-filter-base-selector-selected')) {
-                $(this).removeClass('sus-map-filter-base-selector-selected');
-                if ($('.sus-map-filter-base-selector-selected').length == 0) {
-                    $('#sus-map-filter-deselect').removeClass('sus-map-filter-base-de-selected');
-                    $('#sus-map-filter-deselect').attr("title", "Select All Items");
-                    $('#deselect-x-img').hide();
-                }
-                this_.setMarkerVisibility($(this).attr("id"), false);
-            } else {
-                $(this).addClass('sus-map-filter-base-selector-selected');
-                $('#sus-map-filter-deselect').addClass('sus-map-filter-base-de-selected');
-                $('#sus-map-filter-deselect').attr("title", "Deselect All Items");
-                $('#deselect-x-img').show();
-                this_.setMarkerVisibility($(this).attr("id"), true);
-            }
-            this_.hashManager.hashSelectSet($(this).attr("id"));
-        });
-        $(document).delegate('.sus-map-filter-base-selector', 'mouseenter', function() {
-            var off = $(this).offset();
-            var title = $(this).find("img").attr("alt");
-            $('#sus-map-filter-base-title').html(title);
-            $('#sus-map-filter-base-title').stop(true,true).css({left:off.left+"px", top:off.top+"px"}).show();
-        });
-        $(document).delegate('.sus-map-filter-base-selector', 'mouseleave', function() {
-            $('#sus-map-filter-base-title').stop(true).hide();
-        });
 
-        $(document).delegate('#sus-map-filter-deselect', 'click', function() {
-            if ($(this).hasClass('sus-map-filter-base-de-selected')) {
-                $('.sus-map-filter-base-selector-selected').each(function(k,v) {
-                    this_.setMarkerVisibility($(this).attr("id"), false);
-                    this_.hashManager.hashSelectSet($(this).attr("id"));
+Susmap.prototype.attachWindowHandles = function() {
+    var this_ = this;
+    
+    (function($) {
+        $(window).on("resize", function() {
+            google.maps.event.trigger(this_.map, 'resize');
+            if ($(this_.map.getDiv()).width() < 700) {
+                this_.filter.container.stop(true, true).animate({right:"-240px"}, function() {
+                    $(this).hide();
                 });
-                $('.sus-map-filter-base-selector').removeClass('sus-map-filter-base-selector-selected');
-                $('#sus-map-filter-deselect').removeClass('sus-map-filter-base-de-selected');
-                $('#sus-map-filter-deselect').attr("title", "Select All Items");
-                $('#deselect-x-img').hide();
             } else {
-                $('.sus-map-filter-base-selector').click();
+                this_.filter.container.stop(true, true).show().animate({right:"-8px"});
             }
         });
     }(jQuery));
@@ -370,9 +415,14 @@ Susmap.prototype.attachFilterHandles = function() {
 
 Susmap.prototype.renderMap = function() {
     var this_ = this;
+    
+    google.maps.event.addListener(this_.map, "zoom_changed", function() {
+        console.log(this_.map.getZoom());
+    });
 
     (function($) {
         google.maps.event.trigger(this_.map, 'resize');
+        $(window).resize();
         $('#sus-map-load-bar').animate({width:"100%"}, 1, function() {
             $('.screen-overlay').fadeOut(function(){$(this).remove()});
             var gmw = $(window).width();
@@ -389,4 +439,7 @@ jQuery(document).ready(function($) {
     initInfoWindowNS();
     addTemplatesToDOM();
     MAP = new Susmap();
+    setTimeout(function() {
+        MAP.filter.loadIcons();
+    }, 1000);
 });

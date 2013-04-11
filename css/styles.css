@@ -1,22 +1,48 @@
 
+a:link, a:visited {
+    color:rgb(0, 126, 185) !important;
+}
 .c-b {
     clear:both;
 }
-.sus-map-link {
+.info-window-link, .sus-map-link {
     color:rgb(0, 126, 185);
     cursor:pointer;
 }
-.sus-map-link:hover {
+.sus-map-link {
+    font-size:12px;
+}
+.info-window-link:hover {
     text-decoration:underline;
 }
-.tax-link {
+.info-window-link-taxonomy {
     margin-left:20px;
 }
-.sus-map-action-img {
+.sus-map-action-img, .sus-map-url-img {
     vertical-align:middle;
     margin-right:2px;
 }
+.sus-map-url-img {
+    margin-left:30px;
+}
 
+.sus-map-floating-border {
+    height:1px;
+    width:100%;
+    background:#CCC;
+    position:absolute;
+    top:0px;
+    z-index:-10;
+}
+#sus-map-logo {
+    width:60px;
+    height:60px;
+    padding:10px;
+    bottom:5px;
+    right:5px;
+    position:absolute;
+    z-index:1000;
+}
 .screen-overlay {
     width:100%;
     height:100%;
@@ -71,94 +97,170 @@
     display:none;
 }
 
-#sus-map-col {
-    font:76%/170% Verdana, sans-serif;
-    width:106px;
-    height:100%;
-    left:0px;
-    top:0px;
+#sus-map-filter-container {
     position:fixed;
-    background:transparent url(images/sidebar_leaf.jpg) top right repeat-y;
-    z-index:100;
+    width:200px;
+    min-height:100px;
+    top:47%;
+    margin-top:-175px;
+    right:-8px;
+    background:#FFF;
+    box-shadow:2px 3px 10px rgba(0,0,0,.6);
+    padding:3px 0 0 0;
+/*    border-radius:4px;*/
 }
-    #sus-map-logo {
-        position:absolute;
-        width:60px;
-        height:60px;
-        left:0px;
-        bottom:10px;
-        background:url(images/ess_logo.png) center center no-repeat;
+    .filter-tax-bar {
+        font-size:15px;
+        color:#222;
+        padding:6px 38px 6px 12px;
+        position:fixed;
+        top:90px;
+        right:0px;
+        background:#FFF;
+        box-shadow:2px 3px 6px rgba(0,0,0,.4);
+        display:none;
     }
-    #sus-map-filter-box {
-        width:56px;
-        height:auto;
-        border-radius:3px;
-        position:absolute;
-        top:18px;
-        left:7px;
+    #filter-title {
+        position:fixed;
+        top:86px;
+        padding:4px 10px 4px 10px;
+        right:5px;
+        background:#FFF;
+        box-shadow:2px 3px 6px rgba(0,0,0,.4);
+        display:none;
     }
-        .sus-map-filter-group {
-            width:110px;
-            position:relative;
-        }
-        .sus-map-filter-base-img {
-            width:32px;
-            height:32px;
+    #filter-title:hover {
+        background:#EEE;
+    }
+        .filter-tax-bar-x {
             position:absolute;
-            top:1px;
-            left:2px;
-        }
-        .sus-map-filter-base-selector, .sus-map-filter-base-de {
-            width:1px;
-            height:36px;
-            position:relative;
-            padding-top:0px;
-            padding-left:36px;
-            margin:4px;
-            float:left;
-            background-color:rgb(117, 158, 55);
-            border-radius:3px;
+            top:5px;
+            right:5px;
+            padding:5px;
+            background:#EEE;
             cursor:pointer;
-            box-shadow: 0 2px 7px rgba(0,0,0,.6);
         }
-        .sus-map-filter-base-selector-selected, .sus-map-filter-base-de-selected {
-/*            width:13px;
-            border-radius:3px 0 0 3px;
-            box-shadow:inset 0 2px 7px rgba(0,0,0,0);*/
-            background:#FFF;
+        .filter-tax-bar-x:hover {
+            background:#CCC;
         }
-        #sus-map-filter-deselect {
-            width:20px;
-            height:20px;
-            margin:2px 0 20px 13px;
-            padding:0 0 0 0;
-            border-radius:3px;
-        }
-            #deselect-x-img {
-                display:none;
-            }
-        #sus-map-filter-base-title {
-            color:#666;
-            width:161px;
-            height:25px;
-            padding:3px 0 0 7px;
+    
+    
+        .filter-top-level-term-link {
             position:absolute;
-            margin-top:-19px;
-            margin-left:28px;
-            font-size:12px;
-            text-align:center;
-            background:url(images/tag.png) top left no-repeat;
+            white-space:nowrap;
+            bottom:-36px;
+            padding:4px 10px 4px 10px;
+            right:5px;
+            background:#FFF;
+            box-shadow:2px 3px 6px rgba(0,0,0,.4);
+            display:block;
+        }
+        .filter-top-level-term-link:hover {
+            color:rgb(0, 64, 94);
+        }
+        
+    .filter-search-box {
+        top:-34px;
+        left:-3px;
+        height:22px;
+        padding:3px 5px 1px 5px;
+        width:176px;
+        position:absolute;
+        display:block;
+        border-radius:3px;
+        border:1px solid #CCC;
+        box-shadow:inset 1px 1px 3px rgba(0,0,0,.4);
+    }
+        .filter-search-result-box {
+            width:185px;
+            min-height:20px;
+            position:absolute;
+            box-shadow:2px 3px 6px rgba(0,0,0,.4);
+            top:-6px;
+            left:-2px;
             display:none;
+            z-index:10;
+            background:#FFF;
+            overflow:hidden;
+            border-radius:0 0 5px 5px;
+            padding-bottom:6px;
+        }
+            .filter-search-result {
+                position:relative;
+                padding:5px 9px 5px 9px;
+                color:#444;
+                border-bottom:1px solid #CCC;
+                cursor:pointer;
+            }
+            .filter-search-result:hover {
+                color:#000;
+                background:#EEE;
+            }
+        
+    .filter-text-container {
+        width:100%;
+        margin-top:5px;
+    }
+        .filter-text-span {
+            font-size:15px;
+            color:#222;
+            float:left;
+            margin-left:10px;
+        }
+        .filter-checkbox {
+            width:13px;
+            height:13px;
+            margin:3px 6px 0 6px;
+            border:1px solid;
+            float:left;
+            border-radius:2px;
+            cursor:pointer;
+            display:none;
+        }
+    .filter-icon-container {
+        width:100%;
+        border-bottom:1px solid #CCC;
+        margin-top:3px;
+        height:35px;
+        overflow:hidden;
+        position:relative;
+    }
+        .filter-icon-box {
+            cursor:pointer;
+            top:0px;
+            height:30px;
+            position:absolute;
+            overflow:hidden;
+            display:none;
+        }
+            .filter-icon-img {
+                width:30px;
+                height:30px;
+            }
+            .filter-icon-img:hover {
+                opacity:1 !important;
+            }
+            
+        #filter-hover-title {
+            padding:4px 8px 4px 8px;
+            background:#FFF;
+            position:fixed;
+            margin-top:-38px;
+            margin-left:22px;
+            display:none;
+            z-index:100;
+            box-shadow:0 1px 4px rgba(0,0,0,.7);
+            border-radius:2px;
         }
 
 #sus-map-marker-title {
-    position:absolute;
+    position:fixed;
     background:#FFF;
     padding:5px 10px 5px 10px;
     display:none;
     font-size:12px;
     box-shadow:0 2px 6px #000;
-    border-radius:3px;
+    border-radius:2px;
 }
 
 #sus-map-bottom-row {
@@ -200,40 +302,58 @@
     .info-window-subtitle {
         width:100%;
         height:18px;
-        color:#000;
+        color:#999;
         margin-top:-9px;
         font-weight:normal;
         font-size:10px;
         overflow:hidden;
     }
     .info-window-tax-header {
-        cursor:pointer;
-        
+        margin-top:5px;
+        color:rgb(0, 126, 185);
+        padding:2px 0 0 0;
+        position:relative;
     }
+        .tax-header-title {
+            cursor:pointer;
+        }
+        .tax-header-url {
+            cursor:pointer;
+            color:rgb(0, 126, 185);
+            position:relative;
+            display:none;
+        }
+        .tax-header-url:hover, .tax-header-title:hover {
+            color:rgb(0, 64, 94) !important;
+            text-decoration:none;
+        }
     .info-window-tax {
-        width:100%;
+        width:auto;
         height:auto;
+        margin-top:2px;
         font-size:10px;
+        padding:5px;
         overflow:hidden;
-        background:transparent;
+        background:#FFF;
     }
     .info-window-lcol {
         width:300px;
         min-height:50px;
+        margin-top:10px;
         position:relative;
         float:left;
     }
         .info-window-content {
             width:290px;
-            height:120px;
-            padding:5px;
-            overflow-y:scroll;
+            min-height:120px;
+            padding-bottom:10px;
             position:relative;
         }
     .info-window-rcol {
         width:190px;
         min-height:50px;
         margin-left:10px;
+        margin-top:10px;
         float:left;
     }
         .info-window-image {
@@ -243,13 +363,13 @@
         }
     .info-window-icon-frame {
         position:absolute;
-        top:85px;
+        top:45px;
         left:-60px;
         z-index:-10;
     }
     .info-window-image-building {
         position:absolute;
-        top:101px;
+        top:61px;
         left:-48px;
         height:38px;
         border-radius:40px 0 0 40px;
@@ -257,7 +377,7 @@
     }
         .info-window-image-building-occlude {
             position:absolute;
-            top:101px;
+            top:61px;
             left:0px;
             height:38px;
             width:20px;
@@ -276,13 +396,25 @@
         right:-18px;
         cursor:pointer;
     }
-    
     .sus-map-building-childNode {
-        width:28px;
-        height:28px;
-        float:left;
         cursor:pointer;
+        border:1px solid #FFF;
+        border-radius:3px;
+        padding:2px 2px 4px 2px;
+/*        text-indent:30px;
+        padding-left:30px;*/
+        color:#555 !important;
     }
+    .sus-map-building-childNode:hover {
+        border-color:#CCC;
+        color:#000 !important;
+    }
+        .sus-map-building-child-img {
+            width:28px;
+            height:28px;
+            vertical-align:-50%;
+            margin:2px 5px 0 0;
+        }
 
 
 
@@ -299,8 +431,8 @@
     border-left-color:transparent;
     border-right-color:transparent;
     border-bottom:0px;
-    top:33px;
-    left:8px;
+    bottom:-11px;
+    right:14px;
 }  
     .sus-map-darr-fill {
         width:0px;

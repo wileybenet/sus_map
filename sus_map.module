@@ -70,6 +70,13 @@ function get_all_node_data_susmap($nids) {
         $Nbodies[$row['entity_id']] = $row['body_value'];
     }
     
+    // url
+    $result = Database::getConnection()->query("SELECT entity_id, field_url_value FROM field_revision_field_url");
+    $Nurls = array();
+    while ($row = $result->fetchAssoc()) {
+        $Nurls[$row['entity_id']] = $row['field_url_value'];
+    }
+    
     // image
     $result = Database::getConnection()->query("SELECT field_revision_field_image.entity_id, file_managed.uri FROM {field_revision_field_image} LEFT JOIN file_managed ON field_revision_field_image.field_image_fid = file_managed.fid");
     $Nimages = array();
@@ -130,6 +137,11 @@ function get_all_node_data_susmap($nids) {
             $nodeData[$nid]['location'] = $Nlocs[$nid];
         } else {
             $nodeData[$nid]['location'] = null;
+        }
+        if (isset($Nurls[$nid])) {
+            $nodeData[$nid]['url'] = $Nurls[$nid];
+        } else {
+            $nodeData[$nid]['url'] = null;
         }
     }
     
