@@ -20,6 +20,12 @@ String.prototype.srcToNtype = function() {
     str = str.removeDash().toTitleCase().deleteZeros().replace(/ /g, "");
     return str;
 }
+String.prototype.termToJS = function() {
+    return "term:"+this.replace(/ /g, "");
+}
+String.prototype.toNodeNum = function() {
+    return '<span class="info-window-node-num">'+this+'</span>';
+}
 //          sites/all/modules/sus_map/js/markers/2environmental-office-icon.png
 Array.prototype.clean = function(deleteValue) {
   for (var i = 0; i < this.length; i++) {

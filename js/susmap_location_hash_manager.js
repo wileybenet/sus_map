@@ -57,7 +57,7 @@ LocationHashManager.prototype.updateMap = function(sendData, gett, init) {
         }
     } else { // send data to w.l.hash
         var sets;
-        var infoWin
+        var infoWin;
         if (sendData.nodeSet == "clear") {
             infoWin = sets = "";
         } else {
@@ -111,8 +111,10 @@ LocationHashManager.prototype.genHASH = function(data) {
             }
             
             var index = $.inArray(data.nodeSet, gen.nodeSets)
-            if (index > -1 && !data.repeat) {
-                this_.nodeSets.splice(index, 1);
+            if (index > -1) {
+                if (!data.repeat) {
+                    this_.nodeSets.splice(index, 1);
+                }
             } else {
                 if (gen.nodeSets) {
                     gen.nodeSets.push(data.nodeSet);
@@ -189,48 +191,31 @@ LocationHashManager.prototype.setMarkerVis = function(nidArray, vis) {
     }(jQuery));
     return markers;
 }
-LocationHashManager.prototype.updateFilter = function(nodeSet) {
-    var this_ = this;
-    (function($) {
-        $('.filter-icon-box').each(function() {
-            if ($.inArray($(this).attr("id"), nodeSet) < 0) {
-                $(this).find("img").stop(true).animate({opacity:".3", "padding-top":"8px"}, 100);
-            } else {
-                $(this).find("img").stop(true).animate({opacity:"1", "padding-top":"0px"}, 100);
-            }
-        });
-    }(jQuery));
-}
 LocationHashManager.prototype.fitMapToNewNodes = function(markers, infoWin, load) {
     var this_ = this;
     var map = this.Susmap.map;
     if (load) {
         if (!infoWin) {
             if (markers.length > 0) {
+                var latlng;
                 if (markers.length == 1) {
                     var lat = markers[0].location.lat;
                     var lng = markers[0].location.lng;
-                    var latlng = new google.maps.LatLng(lat, lng);
-                    map.panTo(latlng);
+                    latlng = new google.maps.LatLng(lat, lng);
                 } else {
                     var bounds = new google.maps.LatLngBounds();
                     for (var index in markers) {
                         if (markers[index].location) {
                             var lat = markers[index].location.lat;
                             var lng = markers[index].location.lng;
-                            var latlng = new google.maps.LatLng(lat, lng);
+                            latlng = new google.maps.LatLng(lat, lng);
                             bounds.extend(latlng);
                         }
                     }
-                    map.panToBounds(bounds);
+                    latlng = bounds.getCenter();
                 }
-                //map.setZoom(16);
-//                var zm = map.getZoom();
-//                if (zm > 17) {
-//                    map.setZoom(17);
-//                } else if (zm <= 16) {
-//                    map.setZoom(16);
-//                }
+                map.setZoom(16);
+                map.panTo(latlng);
             }
         }
     }

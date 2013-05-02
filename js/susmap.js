@@ -21,6 +21,8 @@ Susmap = function() {
     this.searchable = {};
     this.searchable.titles = [];
     this.searchable.nidsByTitle = {};
+    this.searchable.nTypesByTitle = {};
+    this.searchable.urlBynType = {};
     
     this.nidsByNtype = {};
     this.nidsByTaxTerm = {};
@@ -29,26 +31,32 @@ Susmap = function() {
     this.filterData = [
                     {catTitle:"Built Environment",
                         catCheckbox:"BuiltEnvironment",
+                        arrColor: "#5D7CFF",
                         nodeTypes:[]
                     },
                     {catTitle:"Environmental Office",
                         catCheckbox:"EnvironmentalOffice",
+                        arrColor: "#00C694",
                         nodeTypes:[]
                     },
                     {catTitle:"Natural Environment",
                         catCheckbox:"NaturalEnvironment",
+                        arrColor: "#18BE11",
                         nodeTypes:[]
                     },
                     {catTitle:"Sustainable Dining",
                         catCheckbox:"SustainableDining",
+                        arrColor: "#C461D4",
                         nodeTypes:[]
                     },
                     {catTitle:"Transportation",
                         catCheckbox:"Transportation",
+                        arrColor: "#FF4242",
                         nodeTypes:[]
                     },
                     {catTitle:"Waste Management",
                         catCheckbox:"WasteManagement",
+                        arrColor: "#E1AD10",
                         nodeTypes:[]
                     }
                 ];
@@ -63,15 +71,83 @@ Susmap = function() {
 Susmap.prototype.init = function() {
     var this_ = this;
 
+    var styles = [
+        {
+            stylers: [
+            //{ hue: "#DCE1C9" }//,
+            //{ saturation: -5 }
+            ]
+        },{
+            featureType: "landscape",
+            elementType: "geometry",
+            stylers: [
+            { color: "#EDF0D6" }
+            ]
+        },{
+            featureType: "poi",
+            elementType: "geometry",
+            stylers: [
+            { color: "#DCE1C9" }
+            ]
+        },{
+            featureType: "poi.medical",
+            elementType: "geometry",
+            stylers: [
+            { color: "#DCE1C9" }
+            ]
+        },{
+            featureType: "poi.sports_complex",
+            elementType: "geometry",
+            stylers: [
+            { color: "#DCE1C9" }
+            ]
+        },{
+            featureType: "poi.government",
+            elementType: "geometry",
+            stylers: [
+            { color: "#DCE1C9" }
+            ]
+        },{
+            featureType: "poi.business",
+            elementType: "geometry",
+            stylers: [
+            { color: "#DCE1C9" }
+            ]
+        },{
+            featureType: "road",
+            elementType: "labels",
+            stylers: [
+            { visibility: "off" }
+            ]
+        },{
+            featureType: "road",
+            elementType: "geometry",
+            stylers: [
+            { color: "#FFFFFF" }
+            ]
+        },{
+            featureType: "water",
+            elementType: "geometry",
+            stylers: [
+            { color: "#BCD2E5" }
+            ]
+        },{
+            featureType: "poi.park",
+            elementType: "geometry",
+            stylers: [
+            { color: "#C2C79E" }
+            ]
+        }
+    ];
 
     // create google map
     var myLatLng = new google.maps.LatLng(47.653851681095, -122.30780562698);
     var mapOptions = {
         center: myLatLng,
-        panControl: false,
         zoom: 16,
+        styles: styles,
         zoomControlOptions: {
-                style:google.maps.ZoomControlStyle.SMALL
+                style:google.maps.ZoomControlStyle.LARGE
             },
         mapTypeControl: false,
         mapTypeId: google.maps.MapTypeId.ROADMAP
@@ -91,7 +167,7 @@ Susmap.prototype.init = function() {
                 this_.filterData[nodeDat.catID-1].nodeTypes.push({
                                                                 name:key, 
                                                                 jsName:jsName, 
-                                                                url:this_.root+'/js/markers/'+nodeDat.url
+                                                                url:this_.root+'js/markers/'+nodeDat.url
                                                             });
         });
 
@@ -99,26 +175,13 @@ Susmap.prototype.init = function() {
         $.each(this_.nodeData, function(key, val) {
             (function () {
                 
-                if ($.inArray(val.title, this_.searchable.titles) == -1) {
-                    this_.searchable.titles.push(val.title);
-                }
-                if (this_.searchable.nidsByTitle[val.title]) {
-                    this_.searchable.nidsByTitle[val.title].push(key);
-                } else {
-                    this_.searchable.nidsByTitle[val.title] = [key];
-                }
-                
                 var nodeType = val.type;
                 var readableNodeType = nodeType.substring(5).removeDash().toTitleCase().deleteZeros();
                 var jsNodeType = "type:"+readableNodeType.replace(/ /g, "");
                 var fileData = this_.addNodeCategory(nodeType.substr(5));
                 var fileName = fileData.url;
-                
-                if (!this_.nidsByNtype[jsNodeType]) {
-                    this_.nidsByNtype[jsNodeType] = [key];
-                } else {
-                    this_.nidsByNtype[jsNodeType].push(key)
-                }
+                if (fileName == "building")
+                    fileName += "/building-logo.png";
                 
                 var marker;
                 
@@ -150,8 +213,28 @@ Susmap.prototype.init = function() {
                             });
                         }
                     });
-                    
                 }
+                
+                
+                // Searchable
+                if ($.inArray(val.title, this_.searchable.titles) == -1) {
+                    this_.searchable.titles.push(val.title);
+                }
+                if (this_.searchable.nidsByTitle[val.title]) {
+                    this_.searchable.nidsByTitle[val.title].push(key);
+                } else {
+                    this_.searchable.nidsByTitle[val.title] = [key];
+                }
+                this_.searchable.nTypesByTitle[val.title] = jsNodeType;
+                this_.searchable.urlBynType[jsNodeType] = fileName;
+                
+                if (!this_.nidsByNtype[jsNodeType]) {
+                    this_.nidsByNtype[jsNodeType] = [key];
+                } else {
+                    this_.nidsByNtype[jsNodeType].push(key)
+                }
+                
+                
 
                 if (readableNodeType == "Building") {
                     this_.nodeData[key].type = readableNodeType;
@@ -180,12 +263,20 @@ Susmap.prototype.init = function() {
                 
             }());
         });
+        
+        $.each(this_.nidsByTaxTerm, function(k,v) {
+            var title = this_.taxTermsByJSName[k];
+            var fileName = "tax/tax-icon.png";
+            this_.searchable.titles.push(title);
+            this_.searchable.nidsByTitle[title] = v;
+            this_.searchable.nTypesByTitle[title] = k;
+            this_.searchable.urlBynType[k] = fileName;
+        });
+        
     }(jQuery));
     
-    
-    
     this.filter = new Filter(this_);
-        this.filter.addToDOM();
+    this.filter.addToDOM();
     this.attachHandles();    
     initializeUWMap(this_);
     this.hashManager.updateMap(null, true, true);
@@ -221,7 +312,7 @@ Susmap.prototype.setBuildingMarker = function(key, val) {
 
     var icon = {
         url: this_.root+"js/markers/building/building-icon.png",
-        anchor: new google.maps.Point(20, 20)
+        anchor: new google.maps.Point(30, 30)
     };
     var marker = new google.maps.Marker({
         position: new google.maps.LatLng(parseFloat(val.location.lat), parseFloat(val.location.lng)),
@@ -238,7 +329,7 @@ Susmap.prototype.setBuildingMarker = function(key, val) {
         }
         var icon = {
             url: this_.root+"js/markers/building/building-hover.png",
-            anchor: new google.maps.Point(20, 20)
+            anchor: new google.maps.Point(30, 30)
         };
         this_.openIconTitle(e, marker.nid);
         marker.setIcon(icon);
@@ -246,7 +337,7 @@ Susmap.prototype.setBuildingMarker = function(key, val) {
     google.maps.event.addListener(marker, 'mouseout', function() {
         var icon = {
             url: this_.root+"js/markers/building/building-icon.png",
-            anchor: new google.maps.Point(20, 20)
+            anchor: new google.maps.Point(30, 30)
         };
         marker.setIcon(icon);
         
@@ -281,7 +372,7 @@ Susmap.prototype.openIconTitle = function(e, nid, vOff) {
         y = loc.y;
     var left = this.map.getDiv().style.marginLeft.split(" ")[0].parseNum()+30+"px";
     
-    this.markerTitle.content.html(this_.nodeData[nid].title);
+    this.markerTitle.content.html(this_.nodeData[nid].title.replace(/_/g, "#"));
     this.markerTitle.css({left:x, top:y, "margin-left":left, "margin-top":-15-vOff+"px"}).stop(true,true).fadeIn(250);
 }
 
@@ -357,28 +448,6 @@ Susmap.prototype.clearMarkers = function() {
     this.visMarkers = [];
 }
 
-Susmap.prototype.isInSetField = function(id, field) {
-    var this_ = this;
-    var vals = this_.nodeData[id];
-    var ret = -1;
-    if (vals.nType != "Building") {
-        var fields = [vals.nType];
-        (function ($) {
-            $.each(vals.taxonomy, function(k,v) {
-                if (v) {
-                    if (k != "Building") {
-                        $.each(v, function(key,val) {
-                            fields.push(val.replace(/ /g, ""));
-                        });
-                    }
-                }
-            });
-            ret =  $.inArray(field, fields);
-        }(jQuery));
-    }
-    return ret >= 0;
-}
-
 Susmap.prototype.attachHandles = function() {
     var this_ = this;
     this.attachInfoWindowHandles();
@@ -400,14 +469,36 @@ Susmap.prototype.attachWindowHandles = function() {
     var this_ = this;
     
     (function($) {
-        $(window).on("resize", function() {
+        $(window).resize(function() {
             google.maps.event.trigger(this_.map, 'resize');
-            if ($(this_.map.getDiv()).width() < 700) {
-                this_.filter.container.stop(true, true).animate({right:"-240px"}, function() {
-                    $(this).hide();
+            
+            if ($(window).height() > 738) {
+                this_.filter.expand();
+            } else {
+                this_.filter.deflate();
+            }
+            
+            if ($(window).width() < 650 || $(window).height() < 300) {
+                this_.filter.hidden = true;
+                if (!this_.filter.termsVisible) {
+                    this_.filter.toggleFilter(false);
+                }
+                this_.map.setOptions({
+                    zoomControlOptions: {
+                        style:google.maps.ZoomControlStyle.SMALL
+                    },
+                    panControl: false
                 });
             } else {
-                this_.filter.container.stop(true, true).show().animate({right:"-8px"});
+                this_.filter.hidden = false;
+                if (!this_.filter.termsVisible)
+                    this_.filter.toggleFilter(true);
+                this_.map.setOptions({
+                    zoomControlOptions: {
+                        style:google.maps.ZoomControlStyle.LARGE
+                    },
+                    panControl: true
+                });
             }
         });
     }(jQuery));
@@ -417,7 +508,7 @@ Susmap.prototype.renderMap = function() {
     var this_ = this;
     
     google.maps.event.addListener(this_.map, "zoom_changed", function() {
-        console.log(this_.map.getZoom());
+        //console.log(this_.map.getZoom());
     });
 
     (function($) {

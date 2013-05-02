@@ -4,9 +4,9 @@ PageStyles = function() {
 
     this.renderLoadingScreen();
 
-    this.setMapResize();
-
     this.renderSusmapOverlays();
+    
+    this.setMapResize();
 
     this.renderMap();
 }
@@ -83,9 +83,12 @@ PageStyles.prototype.renderSusmapOverlays = function() {
                 $('.info-window-close').attr("src", root+"css/images/x.png");
             $('#sus-map-info-window').append('<div class="info-window-tax-header info-window-handle"></div>');
                 $('.info-window-tax-header').append('<div class="sus-map-floating-border tax-header-fBorder"></div>');
-                $('.info-window-tax-header').append('<img class="sus-map-action-img" src="'+root+'css/images/plus.png" />');
-                $('.info-window-tax-header').append('<span class="tax-header-title"></span>');
-                $('.info-window-tax-header').append('<img class="sus-map-url-img info-url" src="'+root+'css/images/plus.png" /><a class="tax-header-url info-url" target="_blank">Read More</a>');
+                $('.info-window-tax-header').append('<div class="tax-header-drop-link-box"></div>')
+                    $('.tax-header-drop-link-box').append('<img class="sus-map-action-img" src="'+root+'css/images/plus.png" />');
+                    $('.tax-header-drop-link-box').append('<span class="tax-header-title"></span>');
+                $('.info-window-tax-header').append('<div class="tax-header-url-box"></div>');
+                    $('.tax-header-url-box').append('<img class="sus-map-url-img info-url" src="'+root+'css/images/plus.png" /><a class="tax-header-url info-url" target="_blank">Read More</a>');
+                $('.info-window-tax-header').append('<div class="c-b"></div>');
             $('#sus-map-info-window').append('<div class="info-window-tax"></div>');
     }(jQuery));
 }
@@ -95,8 +98,6 @@ PageStyles.prototype.setMapResize = function() {
     (function($) {
         $(window).resize(function() {
             this_.renderMap();
-            var h = $(window).height();
-            $('#map-container').css("height", h-1+"px");
         });
     }(jQuery));
 }

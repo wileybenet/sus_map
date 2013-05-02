@@ -12,12 +12,6 @@ a:link, a:visited {
 .sus-map-link {
     font-size:12px;
 }
-.info-window-link:hover {
-    text-decoration:underline;
-}
-.info-window-link-taxonomy {
-    margin-left:20px;
-}
 .sus-map-action-img, .sus-map-url-img {
     vertical-align:middle;
     margin-right:2px;
@@ -29,7 +23,7 @@ a:link, a:visited {
 .sus-map-floating-border {
     height:1px;
     width:100%;
-    background:#CCC;
+    background:#999;
     position:absolute;
     top:0px;
     z-index:-10;
@@ -39,7 +33,7 @@ a:link, a:visited {
     height:60px;
     padding:10px;
     bottom:5px;
-    right:5px;
+    left:0px;
     position:absolute;
     z-index:1000;
 }
@@ -99,14 +93,14 @@ a:link, a:visited {
 
 #sus-map-filter-container {
     position:fixed;
-    width:200px;
+    width:204px;
     min-height:100px;
-    top:47%;
+    top:42%;
     margin-top:-175px;
-    right:-8px;
-    background:#FFF;
-    box-shadow:2px 3px 10px rgba(0,0,0,.6);
-    padding:3px 0 0 0;
+    right:-220px;
+    background:rgba(255,255,255,.8);
+    box-shadow:2px 3px 10px rgba(0,0,0,.5);
+    padding:5px 0 0 0;
 /*    border-radius:4px;*/
 }
     .filter-tax-bar {
@@ -134,68 +128,81 @@ a:link, a:visited {
     }
         .filter-tax-bar-x {
             position:absolute;
-            top:5px;
-            right:5px;
+            top:4px;
+            right:4px;
             padding:5px;
             background:#EEE;
+            border:1px solid rgba(0,0,0,0);
             cursor:pointer;
         }
         .filter-tax-bar-x:hover {
-            background:#CCC;
-        }
-    
-    
-        .filter-top-level-term-link {
-            position:absolute;
-            white-space:nowrap;
-            bottom:-36px;
-            padding:4px 10px 4px 10px;
-            right:5px;
+            border-color:#777;
             background:#FFF;
-            box-shadow:2px 3px 6px rgba(0,0,0,.4);
-            display:block;
-        }
-        .filter-top-level-term-link:hover {
-            color:rgb(0, 64, 94);
         }
         
-    .filter-search-box {
-        top:-34px;
-        left:-3px;
-        height:22px;
-        padding:3px 5px 1px 5px;
-        width:176px;
+    .filter-search-wrapper {
         position:absolute;
-        display:block;
-        border-radius:3px;
-        border:1px solid #CCC;
-        box-shadow:inset 1px 1px 3px rgba(0,0,0,.4);
+        top:-40px;
+        background:rgba(255,255,255,.8);
+        box-shadow:2px 3px 10px rgba(0,0,0,.4);
     }
-        .filter-search-result-box {
-            width:185px;
-            min-height:20px;
-            position:absolute;
-            box-shadow:2px 3px 6px rgba(0,0,0,.4);
-            top:-6px;
-            left:-2px;
-            display:none;
-            z-index:10;
-            background:#FFF;
-            overflow:hidden;
-            border-radius:0 0 5px 5px;
-            padding-bottom:6px;
+        .filter-search-box {
+            height:22px;
+            padding:3px 5px 1px 5px;
+            width:180px;
+            margin:2px 10px 2px 2px;
+            display:block;
+            border-radius:3px;
+            border:1px solid rgb(168, 199, 144);
+            box-shadow:inset 0 0 4px rgba(12, 189, 233, .7);
         }
-            .filter-search-result {
-                position:relative;
-                padding:5px 9px 5px 9px;
-                color:#444;
-                border-bottom:1px solid #CCC;
-                cursor:pointer;
+        .filter-search-box:focus {
+            box-shadow:inset 0 0 4px rgba(12, 189, 233, .7);
+            outline:1px solid #F90;
+        }
+            .filter-search-result-box {
+                width:224px;
+                min-height:20px;
+                position:absolute;
+                box-shadow:inset 1px 1px 8px rgba(0,0,0,.4),
+                    2px 3px 10px rgba(0,0,0,.4);
+                border:3px solid rgb(226, 225, 225);
+                top:32px;
+                left:-31px;
+                display:none;
+                z-index:10;
+                background:#FFF;
+                overflow:hidden;
+                border-radius:5px 0 5px 5px;
             }
-            .filter-search-result:hover {
-                color:#000;
-                background:#EEE;
-            }
+                .filter-search-result {
+                    position:relative;
+                    padding:9px;
+                    color:#444;
+                    display:block;
+                    border-bottom:1px solid #CCC;
+                    cursor:pointer;
+                }
+                .filter-search-result:hover, .filter-search-result:focus {
+                    color:#000;
+                    outline:0px;
+                    box-shadow:inset 0 0 14px rgba(12, 189, 233, .7);
+                }
+                    .filter-search-result-content {
+                        width:167px;
+                        margin-left:26px;
+                        float:left;
+                    }
+                    .filter-search-result-img {
+                        width:24px;
+                        height:24px;
+                        vertical-align:middle;
+                        margin-right:3px;
+                        margin-top:-12px;
+                        top:50%;
+                        left:5px;
+                        position:absolute;
+                    }
         
     .filter-text-container {
         width:100%;
@@ -205,46 +212,73 @@ a:link, a:visited {
             font-size:15px;
             color:#222;
             float:left;
-            margin-left:10px;
-        }
-        .filter-checkbox {
-            width:13px;
-            height:13px;
-            margin:3px 6px 0 6px;
-            border:1px solid;
-            float:left;
-            border-radius:2px;
-            cursor:pointer;
-            display:none;
+            margin-left:7px;
         }
     .filter-icon-container {
         width:100%;
-        border-bottom:1px solid #CCC;
+        border-bottom:1px solid rgba(180,180,180,.5);
         margin-top:3px;
         height:35px;
         overflow:hidden;
         position:relative;
     }
-        .filter-icon-box {
+        .filter-icon-box, .filter-tax-box {
             cursor:pointer;
             top:0px;
             height:30px;
+            width:30px;
             position:absolute;
             overflow:hidden;
             display:none;
         }
-            .filter-icon-img {
-                width:30px;
-                height:30px;
+            .filter-icon-expanded-name {
+                margin:3px 0 0 5px;
+                float:left;
+                color:#555;
+                display:none;
             }
-            .filter-icon-img:hover {
-                opacity:1 !important;
+            .filter-icon-img-fillet {
+                overflow:hidden;
+                width:24px;
+                height:24px;
             }
+                .filter-icon-img {
+                    width:30px;
+                    height:30px;
+                    margin-left:-3px;
+                    margin-top:-1px;
+                }
+                .filter-icon-img:hover {
+                    opacity:1 !important;
+                    filter:grayscale(0%) !important;
+                    -moz-filter:grayscale(0%) !important;
+                    -webkit-filter:grayscale(0%) !important;
+                    -ms-filter:grayscale(0%) !important;
+                }
+        .filter-tax-box {
+            display:block;
+            border-radius:5px;
+            border:1px solid #BBB;
+            padding-left:6px;
+        }
+        .filter-tax-box:hover {
+            background:#EFEFEF;
+            border-color:#666;
+        }
+        #filter-tax-preset-container {
+            width:204px;
+            height:63px;
+            position:absolute;
+            bottom:-71px;
+            background:rgba(255,255,255,.8);
+            box-shadow:2px 3px 10px rgba(0,0,0,.4);
+        }
             
         #filter-hover-title {
             padding:4px 8px 4px 8px;
             background:#FFF;
             position:fixed;
+            white-space:nowrap;
             margin-top:-38px;
             margin-left:22px;
             display:none;
@@ -259,6 +293,7 @@ a:link, a:visited {
     padding:5px 10px 5px 10px;
     display:none;
     font-size:12px;
+    white-space:nowrap;
     box-shadow:0 2px 6px #000;
     border-radius:2px;
 }
@@ -282,6 +317,7 @@ a:link, a:visited {
     width:500px;
     background:#FEFEFE;
     padding:10px;
+    padding-bottom:5px;
     border-radius:7px;
     position:absolute;
     border:8px solid #E7E5E5;
@@ -290,6 +326,7 @@ a:link, a:visited {
     box-shadow:0 3px 16px rgba(0,0,0,.6),
         0 2px 10px rgba(0,0,0,.5);
     z-index:-20;
+    overflow:visible !important;
 }
     .info-window-title {
         width:100%;
@@ -297,15 +334,27 @@ a:link, a:visited {
         color:rgb(111,111,111);
         font-weight:bold;
         font-size:20px;
+        padding:2px 0 0 0;
 /*        overflow:hidden;*/
     }
+        .info-window-node-num {
+            font-size:12px;
+            margin-top:-1px;
+            margin-right:5px;
+            display:block;
+            background:rgb(215, 255, 234);
+            float:left;
+            padding:0 3px 0 3px;
+            border-radius:3px;
+            border:1px solid #999;
+        }
     .info-window-subtitle {
         width:100%;
-        height:18px;
-        color:#999;
-        margin-top:-9px;
+        height:20px;
+        color:#666;
+        margin-top:-6px;
         font-weight:normal;
-        font-size:10px;
+        font-size:11px;
         overflow:hidden;
     }
     .info-window-tax-header {
@@ -313,48 +362,74 @@ a:link, a:visited {
         color:rgb(0, 126, 185);
         padding:2px 0 0 0;
         position:relative;
+        z-index:10;
     }
-        .tax-header-title {
-            cursor:pointer;
+        .tax-header-drop-link-box {
+            float:left;
         }
-        .tax-header-url {
-            cursor:pointer;
-            color:rgb(0, 126, 185);
-            position:relative;
-            display:none;
+            .tax-header-title {
+                cursor:pointer;
+            }
+        .tax-header-url-box {
+            float:left;
         }
-        .tax-header-url:hover, .tax-header-title:hover {
-            color:rgb(0, 64, 94) !important;
-            text-decoration:none;
-        }
+            .tax-header-url {
+                cursor:pointer;
+                color:rgb(0, 126, 185);
+                position:relative;
+            }
+            .tax-header-url:hover, .tax-header-title:hover {
+                color:rgb(0, 64, 94) !important;
+                text-decoration:none;
+            }
     .info-window-tax {
         width:auto;
         height:auto;
         margin-top:2px;
-        font-size:10px;
+        font-size:11px;
         padding:5px;
+        padding-bottom:25px;
+        font-weight:bold;
         overflow:hidden;
         background:#FFF;
+        float:left;
     }
+        .info-window-link:hover {
+            text-decoration:underline;
+        }
+        .info-window-link-taxonomy {
+            margin-left:7px;
+            font-size:11px;
+            font-weight:normal;
+            display:block;
+            text-indent:-18px;
+            padding-left:18px;
+        }
     .info-window-lcol {
         width:300px;
-        min-height:50px;
         margin-top:10px;
         position:relative;
         float:left;
+        clear:both;
     }
         .info-window-content {
             width:290px;
             min-height:120px;
             padding-bottom:10px;
             position:relative;
+            overflow:hidden;
         }
+            .info-window-content-header {
+                border-bottom:1px solid #CCC;
+                margin-bottom:3px;
+            }
     .info-window-rcol {
         width:190px;
         min-height:50px;
         margin-left:10px;
         margin-top:10px;
         float:left;
+        padding-bottom:10px;
     }
         .info-window-image {
             width:100%;
@@ -380,7 +455,7 @@ a:link, a:visited {
             top:61px;
             left:0px;
             height:38px;
-            width:20px;
+            width:40px;
             background:#FFF;
             z-index:-1;
         }
@@ -396,24 +471,25 @@ a:link, a:visited {
         right:-18px;
         cursor:pointer;
     }
-    .sus-map-building-childNode {
+    .sus-map-building-childNode, .sus-map-node-building-link {
         cursor:pointer;
         border:1px solid #FFF;
         border-radius:3px;
         padding:2px 2px 4px 2px;
-/*        text-indent:30px;
-        padding-left:30px;*/
+        text-indent:-36px;
+        padding-left:36px;
         color:#555 !important;
     }
-    .sus-map-building-childNode:hover {
+    .sus-map-building-childNode:hover, .sus-map-node-building-link:hover {
         border-color:#CCC;
         color:#000 !important;
+        box-shadow:inset 0 0 4px rgba(12, 189, 233, .7);
     }
-        .sus-map-building-child-img {
+        .sus-map-building-child-img, .sus-map-node-builing-img {
             width:28px;
             height:28px;
             vertical-align:-50%;
-            margin:2px 5px 0 0;
+            margin:2px 5px 0 3px;
         }
 
 
@@ -493,3 +569,19 @@ a:link, a:visited {
         top:-9px;
         left:1px;
     }  
+
+.sus-map-rarr {
+    width:2px;
+    height:0px;
+    position:absolute;
+    border:7px solid transparent;
+    border-top-color:transparent !important;
+    border-bottom-color:transparent !important;
+    border-right-color:transparent !important;
+    border-right:0px;
+    border-left-width:10px;
+    top:7px;
+    left:10px;
+    z-index:-5;
+    display:none;
+}

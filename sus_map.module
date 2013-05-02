@@ -18,17 +18,17 @@ function sus_map_preprocess_page(&$vars) {
         drupal_add_js($js . 'susmap.js');
         drupal_add_js(array('sus_map' => array('loc' => 'Success!')), 'setting');
         
-        // Get sus-map absolute path
+    // Get sus-map absolute path
         $susHome = drupal_get_path('module', 'sus_map') . '/';
         drupal_add_js(array('sus_map' => array('root' => $susHome)), 'setting');
         
-    // Get markers icon num
-        $dir = drupal_get_path('module', 'sus_map') . '/js/markers/';
-        $fileCount = count(glob("{$dir}/*.*"));
-        drupal_add_js(array('sus_map' => array('markerCount' => $fileCount)), 'setting');
+    // Get default image file paths
+        $defaultImgNames = getDirFileNames('sites/default/files/default_images/');
+        drupal_add_js(array('sus_map' => array('defaultImgs' => $defaultImgNames)), 'setting');
         
     // Get marker directory names
-        $markerNames = getMarkerFileNames($dir);
+        $dir = drupal_get_path('module', 'sus_map') . '/js/markers/';
+        $markerNames = getDirFileNames($dir);
         drupal_add_js(array('sus_map' => array('markerNames' => json_encode($markerNames))), 'setting');
         
     // Get all node ids
@@ -57,6 +57,7 @@ function sus_map_preprocess_page(&$vars) {
         $vars['scripts'] = drupal_get_js();
         $css = drupal_get_path('module', 'sus_map') . '/css/';
         drupal_add_css($css . 'styles.css', "module");
+        drupal_add_css($css . 'filter.css', "module");
         $vars['styles'] = drupal_get_css();
     }
 }
@@ -83,6 +84,13 @@ function get_all_node_data_susmap($nids) {
     while ($row = $result->fetchAssoc()) {
         $Nimages[$row['entity_id']] = str_replace("public://", "", $row['uri']);
     }
+    
+    $result = Database::getConnection()->query("SELECT entity_id, field_url_image_value FROM field_revision_field_url_image");
+    $NurlImages = array();
+    while ($row = $result->fetchAssoc()) {
+        $NurlImages[$row['entity_id']] = $row['field_url_image_value'];
+    }
+    
         
     // location
     $result = Database::getConnection()->query("SELECT location_instance.nid, location.latitude, location.longitude FROM {location} LEFT JOIN location_instance ON location.lid = location_instance.lid");
@@ -133,6 +141,11 @@ function get_all_node_data_susmap($nids) {
         } else {
             $nodeData[$nid]['image'] = null;
         }
+        if (isset($NurlImages[$nid])) {
+            $nodeData[$nid]['urlImage'] = $NurlImages[$nid];
+        } else {
+            $nodeData[$nid]['urlImage'] = null;
+        }
         if (isset($Nlocs[$nid])) {
             $nodeData[$nid]['location'] = $Nlocs[$nid];
         } else {
@@ -171,6 +184,12 @@ function sus_map_menu() {
         'access arguments' => array('access sus_map content'),
         'type' => MENU_CALLBACK
     );
+    $items['all_data'] = array(
+        "title" => "Title",
+        'page callback' => 'sus_map_get_all_data_ajax',
+        'access arguments' => array('access sus_map content'),
+        'type' => MENU_CALLBACK
+    );
     return $items;
 }
 function sus_map_perm() {
@@ -181,6 +200,11 @@ function sus_map_get_data_ajax($nid) {
     
     return drupal_json_output(sus_map_get_field_data_helper($nid));
     
+    exit;
+}
+
+function sus_map_get_all_data_ajax($nid) {
+    return drupal_json_output(node_load($nid));
     exit;
 }
 
@@ -240,7 +264,7 @@ function get_node_field_data($f, $t, $idf, $id) {
 }
 
 
-function getMarkerFileNames($path) {
+function getDirFileNames($path) {
     $entries = array();
     if ($handle = opendir($path)) {
         while (false !== ($entry = readdir($handle))) {
